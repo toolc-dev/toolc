@@ -1,10 +1,11 @@
 // M1 exit smoke: MCP client → `toolc serve --mode mirror` (stdio subprocess)
 // → filesystem reference server → SQLite call log.
+
 // Run from anywhere: node packages/gateway/scripts/smoke-m1.mjs
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import { Client } from "@modelcontextprotocol/client";
+import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../../..");
 

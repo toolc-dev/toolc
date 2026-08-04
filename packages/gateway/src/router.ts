@@ -1,4 +1,4 @@
-import type { CallToolResult, Tool } from "@modelcontextprotocol/sdk/types.js";
+import type { CallToolResult, Tool } from "@modelcontextprotocol/server";
 import { type CapabilityGraph, effectiveDescription, isVisible, type ToolNode } from "@toolc/core";
 import { ToolcError } from "@toolc/shared";
 import type { DownstreamPool } from "./downstream.js";

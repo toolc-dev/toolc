@@ -1,7 +1,6 @@
 import { randomUUID } from "node:crypto";
-import { Server } from "@modelcontextprotocol/sdk/server/index.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
+import { Server } from "@modelcontextprotocol/server";
+import { StdioServerTransport } from "@modelcontextprotocol/server/stdio";
 import { buildGraph, type CapabilityGraph } from "@toolc/core";
 import type { ToolcConfig } from "@toolc/shared";
 import { DownstreamPool } from "./downstream.js";
@@ -34,11 +33,11 @@ export function createGateway(opts: GatewayOptions): Gateway {
 
   const server = new Server({ name: "toolc", version: "0.0.1" }, { capabilities: { tools: {} } });
 
-  server.setRequestHandler(ListToolsRequestSchema, async () => ({
+  server.setRequestHandler("tools/list", async () => ({
     tools: router.servedTools(),
   }));
 
-  server.setRequestHandler(CallToolRequestSchema, async (req) => {
+  server.setRequestHandler("tools/call", async (req) => {
     return router.dispatch(req.params.name, req.params.arguments ?? {});
   });
 

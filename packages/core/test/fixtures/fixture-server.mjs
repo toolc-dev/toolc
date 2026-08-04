@@ -1,8 +1,8 @@
 #!/usr/bin/env node
+import { McpServer } from "@modelcontextprotocol/server";
 // Deterministic stdio MCP server used by core and gateway tests.
 // Plain JS so tests can spawn it with `node` — no TS loader needed.
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { StdioServerTransport } from "@modelcontextprotocol/server/stdio";
 import { z } from "zod";
 
 const NOTES = {
@@ -19,7 +19,7 @@ server.registerTool(
   "read_note",
   {
     description: "Read a note by name and return its full text content.",
-    inputSchema: { name: z.string().describe("Note name, e.g. 'alpha'") },
+    inputSchema: z.object({ name: z.string().describe("Note name, e.g. 'alpha'") }),
   },
   async ({ name }) => {
     const note = NOTES[name];
@@ -32,7 +32,7 @@ server.registerTool(
 
 server.registerTool(
   "list_notes",
-  { description: "List the names of all available notes.", inputSchema: {} },
+  { description: "List the names of all available notes.", inputSchema: z.object({}) },
   async () => ({ content: [{ type: "text", text: Object.keys(NOTES).join("\n") }] }),
 );
 
@@ -40,14 +40,14 @@ server.registerTool(
   "add",
   {
     description: "Add two numbers and return the sum.",
-    inputSchema: { a: z.number(), b: z.number() },
+    inputSchema: z.object({ a: z.number(), b: z.number() }),
   },
   async ({ a, b }) => ({ content: [{ type: "text", text: String(a + b) }] }),
 );
 
 server.registerTool(
   "ping",
-  { description: "Health check. Returns 'pong'.", inputSchema: {} },
+  { description: "Health check. Returns 'pong'.", inputSchema: z.object({}) },
   async () => ({ content: [{ type: "text", text: "pong" }] }),
 );
 

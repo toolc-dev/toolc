@@ -1,5 +1,5 @@
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
+import type { CallToolResult } from "@modelcontextprotocol/client";
+import { Client } from "@modelcontextprotocol/client";
 import { createTransport } from "@toolc/core";
 import { type DownstreamConfig, DownstreamError } from "@toolc/shared";
 
@@ -86,9 +86,12 @@ export class DownstreamPool {
   ): Promise<CallToolResult> {
     const client = await this.getClient(sourceId);
     try {
-      return (await client.callTool({ name: toolName, arguments: args }, undefined, {
-        timeout: this.opts.callTimeoutMs,
-      })) as CallToolResult;
+      return (await client.callTool(
+        { name: toolName, arguments: args },
+        {
+          timeout: this.opts.callTimeoutMs,
+        },
+      )) as CallToolResult;
     } catch (err) {
       // A transport-level failure poisons the cached client; drop it so the
       // next call reconnects instead of erroring forever.

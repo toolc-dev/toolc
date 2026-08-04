@@ -1,7 +1,6 @@
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
-import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
-import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
+import type { Transport } from "@modelcontextprotocol/client";
+import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
+import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
 import { type DownstreamConfig, DownstreamError, type TransportConfig } from "@toolc/shared";
 import { contentHash, withVersion } from "../ir/serialize.js";
 import { type CapabilityGraph, type SourceInfo, type ToolNode, toolId } from "../ir/types.js";

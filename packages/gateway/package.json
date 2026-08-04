@@ -11,7 +11,8 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.30.0",
+    "@modelcontextprotocol/client": "^2.0.0",
+    "@modelcontextprotocol/server": "^2.0.0",
     "@toolc/core": "workspace:*",
     "@toolc/shared": "workspace:*",
     "better-sqlite3": "^12.4.1",
