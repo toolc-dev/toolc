@@ -1,0 +1,20 @@
+// Working dev config: filesystem reference server over the frozen sandbox.
+// The full benchmark federation (Aiera, GitHub, a "bad" server) is added in M2–M4.
+{
+  "project": "toolc-dev",
+  "downstream": [
+    {
+      "id": "fs",
+      "transport": {
+        "type": "stdio",
+        "command": "npx",
+        "args": ["-y", "@modelcontextprotocol/server-filesystem", "./sandbox"]
+      }
+    }
+  ],
+  "serve": {
+    "mode": "mirror",
+    "transport": "stdio",
+    "logDb": ".toolc/calls.db"
+  }
+}

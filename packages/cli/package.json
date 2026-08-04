@@ -1,0 +1,22 @@
+{
+  "name": "toolc",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "toolc": "./bin/toolc.mjs"
+  },
+  "exports": {
+    ".": "./src/main.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@toolc/core": "workspace:*",
+    "@toolc/gateway": "workspace:*",
+    "@toolc/shared": "workspace:*",
+    "commander": "^14.0.0",
+    "tsx": "^4.20.0"
+  }
+}
