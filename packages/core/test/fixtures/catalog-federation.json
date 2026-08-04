@@ -1,0 +1,120 @@
+{
+  "description": "Fixture catalog for pass unit tests: two fake sources, 12 tools, including noise tools (ping/debug), an ambiguous find/search pair, and a chain-shaped trio.",
+  "sources": {
+    "finco": [
+      {
+        "name": "find_companies",
+        "description": "Find companies. Search for companies. Returns companies matching the query. This tool finds companies.",
+        "inputSchema": {
+          "type": "object",
+          "properties": { "query": { "type": "string" } },
+          "required": ["query"]
+        }
+      },
+      {
+        "name": "find_events",
+        "description": "Find events for a company. Can also search events. Events include earnings calls and conferences and other events.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "company_id": { "type": "string" },
+            "start": { "type": "string" },
+            "end": { "type": "string" }
+          },
+          "required": ["company_id"]
+        }
+      },
+      {
+        "name": "search_transcripts",
+        "description": "Search transcripts. Searches within event transcripts for text. May be confused with find_events which finds the events themselves.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "event_ids": { "type": "array", "items": { "type": "string" } },
+            "query_text": { "type": "string" }
+          },
+          "required": ["event_ids", "query_text"]
+        }
+      },
+      {
+        "name": "get_transcript",
+        "description": "Get a transcript.",
+        "inputSchema": {
+          "type": "object",
+          "properties": { "event_id": { "type": "string" } },
+          "required": ["event_id"]
+        }
+      },
+      {
+        "name": "ping",
+        "description": "Ping the API.",
+        "inputSchema": { "type": "object", "properties": {} }
+      },
+      {
+        "name": "debug_auth",
+        "description": "Debug authentication state.",
+        "inputSchema": { "type": "object", "properties": {} }
+      }
+    ],
+    "repohub": [
+      {
+        "name": "search_repositories",
+        "description": "Search repositories on the platform using a query string with optional qualifiers.",
+        "inputSchema": {
+          "type": "object",
+          "properties": { "q": { "type": "string" } },
+          "required": ["q"]
+        }
+      },
+      {
+        "name": "list_repositories",
+        "description": "List repositories for a user or organization. Not a search; returns all repositories.",
+        "inputSchema": {
+          "type": "object",
+          "properties": { "owner": { "type": "string" } },
+          "required": ["owner"]
+        }
+      },
+      {
+        "name": "get_file_contents",
+        "description": "Get the contents of a file in a repository.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "owner": { "type": "string" },
+            "repo": { "type": "string" },
+            "path": { "type": "string" }
+          },
+          "required": ["owner", "repo", "path"]
+        }
+      },
+      {
+        "name": "list_issues",
+        "description": "List issues in a repository with optional filters for state and labels.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "owner": { "type": "string" },
+            "repo": { "type": "string" },
+            "state": { "type": "string" }
+          },
+          "required": ["owner", "repo"]
+        }
+      },
+      {
+        "name": "search_issues",
+        "description": "Search issues across repositories. Similar to list_issues but query-driven.",
+        "inputSchema": {
+          "type": "object",
+          "properties": { "q": { "type": "string" } },
+          "required": ["q"]
+        }
+      },
+      {
+        "name": "admin_enterprise_stats",
+        "description": "Get enterprise server statistics. Requires site admin.",
+        "inputSchema": { "type": "object", "properties": {} }
+      }
+    ]
+  }
+}

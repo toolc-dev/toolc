@@ -1,0 +1,62 @@
+// toolc configuration — single source of truth, validated by packages/shared.
+// Copy to toolc.config.jsonc and edit. `${VAR}` interpolates from the environment
+// and fails fast if the variable is unset.
+{
+  "project": "example",
+
+  // Downstream MCP servers to federate. stdio transports are local-CLI-only;
+  // hosted pools accept streamable HTTP only.
+  "downstream": [
+    {
+      "id": "fs",
+      "transport": {
+        "type": "stdio",
+        "command": "npx",
+        "args": ["-y", "@modelcontextprotocol/server-filesystem", "./sandbox"]
+      }
+    },
+    {
+      "id": "aiera",
+      "transport": {
+        "type": "http",
+        "url": "https://mcp-pub.aiera.com",
+        "headers": { "Authorization": "Bearer ${AIERA_TOKEN}" }
+      }
+    }
+  ],
+
+  "compile": {
+    // Passes run in this order.
+    "passes": ["dead-tool", "rewrite", "macro-inline", "selection"],
+    "deadTool": {
+      // Glob-style tool-id patterns ("source:tool", "*" wildcards).
+      "exclude": [],
+      "include": null
+    },
+    "rewrite": {
+      "model": "claude-sonnet-4-6",
+      "cachePath": ".toolc/rewrites.json",
+      "reviewMode": true
+    },
+    "selection": {
+      "pinned": ["search_tools", "call_tool"],
+      "alwaysVisible": [],
+      "topK": 8
+    }
+  },
+
+  "serve": {
+    "mode": "mirror", // "mirror" | "compiled"
+    "transport": "stdio", // "stdio" | "http"
+    "port": 8976, // http only
+    "logDb": ".toolc/calls.db"
+  },
+
+  "bench": {
+    "model": "claude-sonnet-4-6",
+    "judgeModel": "claude-opus-4-8",
+    "maxTurns": 25,
+    "tasksDir": "./tasks",
+    "trials": 3
+  }
+}

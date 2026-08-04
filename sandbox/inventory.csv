@@ -1,0 +1,5 @@
+sku,name,quantity,unit_price_usd
+TC-001,widget-alpha,142,3.50
+TC-002,widget-beta,7,12.00
+TC-003,gizmo-gamma,903,0.25
+TC-004,gizmo-delta,0,45.10
