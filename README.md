@@ -29,7 +29,9 @@ node packages/cli/bin/toolc.mjs -c toolc.config.jsonc serve --mode mirror
 
 ## License
 
-Engine (`core`, `gateway`, `cli`, `harness`): Apache-2.0, forever.
-The hosted console will be open source with a declared `ee/` boundary for
-future enterprise features — see spec §7.7. Formal LICENSE files land before
-the repo goes public.
+Engine (`core`, `gateway`, `cli`, `harness`, `shared`, SQLite driver):
+Apache-2.0, forever — anyone can compile and serve their own tool surfaces
+locally with the exact same compilation quality as the hosted product.
+The toolc.dev console and hosted platform are proprietary and live in a
+separate private repository. Formal LICENSE files land before this repo
+goes public.
