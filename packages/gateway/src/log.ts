@@ -56,6 +56,32 @@ export class CallLog {
     `);
   }
 
+  /**
+   * Two-phase logging for calls that spawn children (call_tool, macros): the
+   * parent row is inserted before execution so children can reference its id
+   * via parent_call_id, then finished with the outcome.
+   */
+  begin(call: Omit<CallRecord, "resultBytes" | "isError" | "errorText" | "latencyMs">): number {
+    return this.record({
+      ...call,
+      resultBytes: null,
+      isError: false,
+      errorText: null,
+      latencyMs: -1,
+    });
+  }
+
+  finish(
+    id: number,
+    outcome: Pick<CallRecord, "resultBytes" | "isError" | "errorText" | "latencyMs">,
+  ): void {
+    this.db
+      .prepare(
+        "UPDATE calls SET result_bytes = ?, is_error = ?, error_text = ?, latency_ms = ? WHERE id = ?",
+      )
+      .run(outcome.resultBytes, outcome.isError ? 1 : 0, outcome.errorText, outcome.latencyMs, id);
+  }
+
   record(call: CallRecord): number {
     const argsJson =
       Buffer.byteLength(call.argsJson) > ARGS_JSON_MAX_BYTES

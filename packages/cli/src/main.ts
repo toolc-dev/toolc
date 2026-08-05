@@ -55,8 +55,16 @@ program
 
 program
   .command("compile")
-  .description("run the pass pipeline and emit .toolc/compiled.json")
-  .action(() => fail("`toolc compile` lands with the compile pipeline (M2)"));
+  .description("run the pass pipeline and emit the compiled artifact + report")
+  .option("--skip-unavailable", "skip downstreams that fail to connect")
+  .option("--report <path>", "compile report output path", ".toolc/compile-report.md")
+  .action(async (opts: { skipUnavailable?: boolean; report: string }) => {
+    const { compileCommand } = await import("./compile.js");
+    await compileCommand(loadConfig(program.opts().config), {
+      skipUnavailable: opts.skipUnavailable ?? false,
+      reportPath: opts.report,
+    });
+  });
 
 program
   .command("bench")

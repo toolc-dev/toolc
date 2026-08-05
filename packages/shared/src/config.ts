@@ -38,6 +38,8 @@ export const PassNameSchema = z.enum(["dead-tool", "rewrite", "macro-inline", "s
 
 export const CompileSchema = z.object({
   passes: z.array(PassNameSchema).default(["dead-tool", "rewrite", "macro-inline", "selection"]),
+  /** Directory of hand-authored macro modules (TS files exporting defineMacro results). */
+  macrosDir: z.string().default("./macros"),
   deadTool: z
     .object({
       /** Glob-style tool-id patterns ("source:tool", "*" wildcard). */
@@ -75,6 +77,8 @@ export const ServeSchema = z.object({
   transport: z.enum(["stdio", "http"]).default("stdio"),
   port: z.number().int().min(1).max(65535).default(8976),
   logDb: z.string().default(".toolc/calls.db"),
+  /** Compiled artifact consumed by `serve --mode compiled` (written by `toolc compile`). */
+  compiledPath: z.string().default(".toolc/compiled.json"),
   /** Per-call downstream timeout in milliseconds. */
   callTimeoutMs: z.number().int().min(1000).default(60_000),
 });
