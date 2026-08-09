@@ -1,0 +1,9 @@
+id: smoke-needle-01
+category: needle
+prompt: >
+  What is the secret word contained in the note named "alpha"?
+grading:
+  type: contains
+  expected: kumquat
+expected_tools: ["fixture:read_note"]
+timeout_turns: 4

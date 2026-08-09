@@ -1,0 +1,11 @@
+# Verified against sandbox/inventory.csv (frozen fixture) 2026-08-04.
+id: needle-fs-01
+category: needle
+prompt: >
+  In the sandbox inventory data, what quantity of gizmo-gamma is currently in
+  stock? Answer with the number.
+grading:
+  type: contains
+  expected: "903"
+expected_tools: ["fs:search_files", "fs:read_text_file"]
+timeout_turns: 10

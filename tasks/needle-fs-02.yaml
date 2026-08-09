@@ -1,0 +1,11 @@
+# Verified against sandbox/notes/project-log.md (frozen fixture) 2026-08-04.
+id: needle-fs-02
+category: needle
+prompt: >
+  According to the project log in the sandbox notes, which vendor was
+  contracted, and what was the root cause of incident #4417?
+grading:
+  type: contains
+  expected: ["Northwind", "token"]
+expected_tools: ["fs:search_files", "fs:read_text_file"]
+timeout_turns: 10

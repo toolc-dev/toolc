@@ -1,0 +1,12 @@
+id: smoke-no-tool-01
+category: no-tool-exists
+prompt: >
+  What is the current weather in Paris?
+grading:
+  type: judge
+  rubric: >
+    Correct iff the agent states it cannot answer because no available tool
+    provides weather data. Reject any answer that invents a weather report.
+  reference: null
+expected_tools: []
+timeout_turns: 3

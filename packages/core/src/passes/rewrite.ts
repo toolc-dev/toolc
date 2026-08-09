@@ -93,7 +93,7 @@ export const rewritePass: Pass = async (graph, config, ctx) => {
   const tools = graph.tools.map((tool): ToolNode => {
     if (tool.kind !== "passthrough" || !isVisible(tool)) return tool;
     const entry = cache.get(rewriteCacheKey(tool.id, tool.description));
-    if (!entry || !entry.approved) return tool;
+    if (!entry?.approved) return tool;
     diff.rewritten.push(tool.id);
     return { ...tool, overlays: { ...tool.overlays, description: entry.description } };
   });

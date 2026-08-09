@@ -201,7 +201,7 @@ export class Router {
       );
     }
     const target = this.byToolId.get(name);
-    if (!target || target.kind !== "passthrough" || !isVisible(target)) {
+    if (target?.kind !== "passthrough" || !isVisible(target)) {
       const suggestions = this.retriever?.search(name.replaceAll(/[_:]/g, " "), 3) ?? [];
       return errorResult(
         `unknown tool "${name}".` +
@@ -270,7 +270,7 @@ export class Router {
       stepArgs: Record<string, unknown>,
     ): Promise<MacroCallResult> => {
       const target = this.byToolId.get(toolId);
-      if (!target || target.kind !== "passthrough") {
+      if (target?.kind !== "passthrough") {
         throw new ToolcError(`macro ${node.name} called unknown tool ${toolId}`);
       }
       const result = await this.dispatchNode(target, stepArgs, callId);

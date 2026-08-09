@@ -83,12 +83,35 @@ export const ServeSchema = z.object({
   callTimeoutMs: z.number().int().min(1000).default(60_000),
 });
 
+export const BenchConditionSchema = z.enum(["raw", "compiled"]);
+
 export const BenchSchema = z.object({
   model: z.string().default("claude-sonnet-4-6"),
   judgeModel: z.string().default("claude-opus-4-8"),
   maxTurns: z.number().int().min(1).default(25),
   tasksDir: z.string().default("./tasks"),
   trials: z.number().int().min(1).default(3),
+  conditions: z.array(BenchConditionSchema).default(["raw", "compiled"]),
+  /** Where transcripts + reports land. */
+  outDir: z.string().default(".toolc/bench"),
+  /**
+   * Cost table: Anthropic list prices in USD per million tokens, with the
+   * date they were checked. Reports cite this stamp.
+   */
+  prices: z
+    .object({
+      dateStamp: z.string().default("2026-08-04"),
+      models: z
+        .record(z.string(), z.object({ inputPerMTok: z.number(), outputPerMTok: z.number() }))
+        .default({
+          "claude-sonnet-4-6": { inputPerMTok: 3, outputPerMTok: 15 },
+          "claude-sonnet-5": { inputPerMTok: 3, outputPerMTok: 15 },
+          "claude-opus-4-8": { inputPerMTok: 5, outputPerMTok: 25 },
+          "claude-opus-5": { inputPerMTok: 5, outputPerMTok: 25 },
+          "claude-haiku-4-5": { inputPerMTok: 1, outputPerMTok: 5 },
+        }),
+    })
+    .prefault({}),
 });
 
 // --- Root ---------------------------------------------------------------------

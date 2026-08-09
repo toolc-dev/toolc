@@ -1,0 +1,32 @@
+// Harness smoke-suite config: fixture downstream only, mock model prices.
+{
+  "project": "harness-smoke",
+  "downstream": [
+    {
+      "id": "fixture",
+      "transport": {
+        "type": "stdio",
+        "command": "node",
+        "args": ["../../../core/test/fixtures/fixture-server.mjs"]
+      }
+    }
+  ],
+  "compile": {
+    // No LLM in CI: rewrite pass no-ops (warns) and originals serve.
+    "passes": ["dead-tool", "rewrite", "macro-inline", "selection"]
+  },
+  "bench": {
+    "model": "mock-model",
+    "judgeModel": "mock-judge",
+    "maxTurns": 4,
+    "tasksDir": "./tasks",
+    "trials": 1,
+    "conditions": ["raw", "compiled"],
+    "prices": {
+      "dateStamp": "2026-01-01",
+      "models": {
+        "mock-model": { "inputPerMTok": 3, "outputPerMTok": 15 }
+      }
+    }
+  }
+}

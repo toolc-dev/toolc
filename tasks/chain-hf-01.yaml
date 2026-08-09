@@ -1,0 +1,12 @@
+# Macro-covered chain (find_model_readme). Live data; ranking pinned by
+# sort=downloads, verified 2026-08-04. Re-verify before published runs.
+id: chain-hf-01
+category: cross-server-chain
+prompt: >
+  Find the most-downloaded model on Hugging Face matching "tiny random llama"
+  and tell me its full repo id (author/name).
+grading:
+  type: contains
+  expected: "hmellor/tiny-random-LlamaForCausalLM"
+expected_tools: ["hf:hub_repo_search"]
+timeout_turns: 10

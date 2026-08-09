@@ -1,0 +1,12 @@
+# Live Hugging Face data; hmellor/tiny-random-LlamaForCausalLM verified stable
+# (transformers library tag) 2026-08-04. Re-verify before published runs.
+id: single-hf-01
+category: single-tool
+prompt: >
+  Which machine-learning library is the Hugging Face model
+  "hmellor/tiny-random-LlamaForCausalLM" built with, according to its tags?
+grading:
+  type: contains
+  expected: transformers
+expected_tools: ["hf:hub_repo_search"]
+timeout_turns: 8

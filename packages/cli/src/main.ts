@@ -68,8 +68,14 @@ program
 
 program
   .command("bench")
-  .description("run the benchmark and emit a report")
-  .action(() => fail("`toolc bench` lands with the harness (M3)"));
+  .description("run the benchmark grid and emit a report")
+  .option("--tasks <dir>", "task suite directory (overrides config)")
+  .option("--conditions <list>", "comma-separated: raw,compiled (overrides config)")
+  .option("--trials <n>", "trials per (task, condition) (overrides config)")
+  .action(async (opts: { tasks?: string; conditions?: string; trials?: string }) => {
+    const { benchCommand } = await import("./bench.js");
+    await benchCommand(loadConfig(program.opts().config), program.opts().config, opts);
+  });
 
 function fail(message: string): never {
   console.error(`error: ${message}`);

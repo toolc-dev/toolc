@@ -1,3 +1,7 @@
-// Benchmark harness (runner, grading, metrics, report) lands in M3.
-// It talks to the gateway only over MCP — never in-process (spec §5).
-export const HARNESS_MILESTONE = "M3";
+export * from "./bench.js";
+export * from "./grade.js";
+export * from "./llm.js";
+export * from "./metrics.js";
+export * from "./report.js";
+export * from "./runner.js";
+export * from "./task.js";

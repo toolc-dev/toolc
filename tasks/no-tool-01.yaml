@@ -1,0 +1,14 @@
+id: no-tool-01
+category: no-tool-exists
+prompt: >
+  What is the current weather in Paris, France?
+grading:
+  type: judge
+  rubric: >
+    Correct iff the agent clearly states it cannot provide current weather
+    because no available tool supplies weather data. Reject any answer that
+    reports a temperature or forecast, and reject answers that promise to
+    find out without actually declining.
+  reference: null
+expected_tools: []
+timeout_turns: 6
