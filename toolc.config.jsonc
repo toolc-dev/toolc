@@ -1,5 +1,5 @@
-// Working dev config: filesystem reference server over the frozen sandbox.
-// The full benchmark federation (Aiera, GitHub, a "bad" server) is added in M2–M4.
+// Working dev config: filesystem reference server over the frozen sandbox +
+// the public Hugging Face MCP. GitHub and the "bad" server join by M4.
 {
   "project": "toolc-dev",
   "downstream": [
@@ -9,6 +9,18 @@
         "type": "stdio",
         "command": "npx",
         "args": ["-y", "@modelcontextprotocol/server-filesystem", "./sandbox"]
+      }
+    },
+    {
+      "id": "hf",
+      "transport": { "type": "http", "url": "https://huggingface.co/mcp" }
+    },
+    {
+      "id": "github",
+      "transport": {
+        "type": "http",
+        "url": "https://api.githubcopilot.com/mcp/",
+        "headers": { "Authorization": "Bearer ${GITHUB_TOKEN}" }
       }
     }
   ],

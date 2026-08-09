@@ -78,9 +78,9 @@ describe("dead-tool pass", () => {
 
 describe("rewrite pass", () => {
   const llmReturning = (descriptions: Record<string, string>) => async () =>
-    JSON.stringify(
-      Object.entries(descriptions).map(([name, description]) => ({ name, description })),
-    );
+    Object.entries(descriptions)
+      .map(([name, description]) => `<<<TOOL ${name}>>>\n${description}\n<<<END>>>`)
+      .join("\n");
 
   it("generates proposals into the cache but does not apply them in reviewMode", async () => {
     const cache = createMemoryRewriteCache();

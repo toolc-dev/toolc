@@ -5,7 +5,7 @@ import type { Pass, PassDiff, RewriteEntry } from "./types.js";
 /**
  * Bump when the prompt materially changes — invalidates all cached rewrites.
  */
-export const PROMPT_VERSION = "v1";
+export const PROMPT_VERSION = "v2";
 
 export function rewriteCacheKey(toolId: string, originalDescription: string): string {
   return `${toolId}:${contentHash(originalDescription)}:${PROMPT_VERSION}`;
@@ -16,7 +16,10 @@ const SYSTEM_PROMPT = `You optimize tool descriptions for LLM agents. You will r
 - Explicitly disambiguate against sibling tools where confusion is plausible ("Use X instead when ...").
 - If the original buries parameter guidance in prose, add a short "Parameters:" section with one line per parameter.
 - Never invent capabilities not present in the original description or schema.
-Respond with ONLY a JSON array: [{"name": "<tool name>", "description": "<rewritten>"}, ...] covering every tool given.`;
+Respond with one block per tool, exactly in this format (no other prose):
+<<<TOOL tool_name>>>
+rewritten description (may span multiple lines)
+<<<END>>>`;
 
 /**
  * Description optimization. Batches tools per source with full sibling
@@ -122,9 +125,14 @@ async function generateForSource(
   const prompt = `Server catalog (all sibling tools, for disambiguation context):\n\n${catalog}\n\nRewrite descriptions for these tools: ${targets.map((t) => t.name).join(", ")}`;
 
   const raw = await llm({ model, system: SYSTEM_PROMPT, prompt, maxTokens: 8192 });
-  const jsonText = raw.replace(/^[\s\S]*?(\[)/, "$1").replace(/(\])[\s\S]*$/, "$1");
-  const parsed = JSON.parse(jsonText) as Array<{ name: string; description: string }>;
-  return new Map(parsed.map((p) => [p.name, p.description]));
+  // Delimiter blocks instead of JSON: model-written descriptions contain
+  // newlines/quotes that reliably break JSON string escaping.
+  const proposals = new Map<string, string>();
+  const blockPattern = /<<<TOOL\s+(\S+?)>>>\n([\s\S]*?)<<<END>>>/g;
+  for (const match of raw.matchAll(blockPattern)) {
+    proposals.set(match[1]!, match[2]!.trim());
+  }
+  return proposals;
 }
 
 /** Enforce the ≤320-char summary line by truncating at a word boundary. */

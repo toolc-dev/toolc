@@ -16,11 +16,18 @@
       }
     },
     {
-      "id": "aiera",
+      // Public production server, no auth required — real multi-hop chains
+      // (search → details → file read).
+      "id": "hf",
+      "transport": { "type": "http", "url": "https://huggingface.co/mcp" }
+    },
+    {
+      // Servers needing auth take static headers; ${VAR} pulls from the env.
+      "id": "github",
       "transport": {
         "type": "http",
-        "url": "https://mcp-pub.aiera.com",
-        "headers": { "Authorization": "Bearer ${AIERA_TOKEN}" }
+        "url": "https://api.githubcopilot.com/mcp/",
+        "headers": { "Authorization": "Bearer ${GITHUB_TOKEN}" }
       }
     }
   ],

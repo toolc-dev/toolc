@@ -331,7 +331,7 @@ Compile triggers: pool change (add/remove/edit server), settings change, manual 
 
 Chosen for: one server we control end-to-end and know deeply, one large well-built catalog, one deliberately noisy/mediocre surface (the "we fix bad servers" demo requires a bad server), and one local/deterministic server for stable tasks.
 
-1. **Aiera MCP** (`https://mcp-pub.aiera.com`) — production financial-research server, ~50 tools, real multi-hop chains (find → get → search patterns). The Aiera Lift methodology transfers directly. Use read-only tools in tasks.
+1. **Hugging Face MCP** (`https://huggingface.co/mcp`) — production server, anonymous access, real multi-hop chains (search → repo details → `hf://` file reads with a URI grammar agents fumble). *[Amended 2026-08-04: originally Aiera MCP; swapped to keep the project at arm's length from the author's employer. HF's catalog is small (~4 tools), so the 120+-tool federation target leans on GitHub and a deliberately fat auto-generated server (#4).]*
 2. **GitHub MCP server** — large catalog (dozens of tools), well-known, good stress test for selection; plenty of read-only task material against public repos.
 3. **Filesystem reference server** (`@modelcontextprotocol/server-filesystem`) pointed at a fixture directory checked into the repo — fully deterministic tasks, useful for grading stability.
 4. **One "bad" server** — pick or build a thin OpenAPI-auto-generated MCP wrapper (e.g., around a public weather or reference-data API) with verbose, undifferentiated tool descriptions. If nothing suitable exists off the shelf, generate one with an existing openapi-to-mcp converter and *do not* hand-tune it: its badness is the point. The rewrite pass's before/after on this server is a headline demo.
