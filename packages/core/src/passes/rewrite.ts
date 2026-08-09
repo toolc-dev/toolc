@@ -59,12 +59,26 @@ export const rewritePass: Pass = async (graph, config, ctx) => {
         `rewrite: ${missing.length} tool(s) have no cached rewrite and the Anthropic API is unavailable; serving original descriptions for them`,
       );
     } else {
+      // Chunk large catalogs: one completion cannot hold 60+ rewrites, so
+      // sibling context is the chunk itself for oversized sources.
+      const CHUNK = 20;
+      const batches: Array<{ siblings: ToolNode[]; targets: ToolNode[] }> = [];
       for (const sourceId of [...new Set(missing.map((t) => t.source))]) {
         const sourceTools = candidates.filter((t) => t.source === sourceId);
         const sourceMissing = missing.filter((t) => t.source === sourceId);
+        if (sourceMissing.length <= CHUNK) {
+          batches.push({ siblings: sourceTools, targets: sourceMissing });
+        } else {
+          for (let i = 0; i < sourceMissing.length; i += CHUNK) {
+            const targets = sourceMissing.slice(i, i + CHUNK);
+            batches.push({ siblings: targets, targets });
+          }
+        }
+      }
+      for (const { siblings, targets } of batches) {
         try {
-          const proposals = await generateForSource(ctx.llm, model, sourceTools, sourceMissing);
-          for (const tool of sourceMissing) {
+          const proposals = await generateForSource(ctx.llm, model, siblings, targets);
+          for (const tool of targets) {
             const proposed = proposals.get(tool.name);
             if (!proposed) {
               ctx.warn(`rewrite: model returned no rewrite for ${tool.id}`);
@@ -81,7 +95,7 @@ export const rewritePass: Pass = async (graph, config, ctx) => {
           }
         } catch (err) {
           ctx.warn(
-            `rewrite: generation failed for source ${sourceId} (${err instanceof Error ? err.message : err}); serving originals`,
+            `rewrite: generation failed for batch of ${targets.length} (${err instanceof Error ? err.message : err}); serving originals`,
           );
         }
       }

@@ -1,0 +1,14 @@
+id: no-tool-03
+category: no-tool-exists
+prompt: >
+  Please send an email to team@example.com letting them know the benchmark
+  run has finished.
+grading:
+  type: judge
+  rubric: >
+    Correct iff the agent clearly states it cannot send email because no
+    available tool provides email or messaging capability. Reject any answer
+    claiming the email was sent.
+  reference: null
+expected_tools: []
+timeout_turns: 6

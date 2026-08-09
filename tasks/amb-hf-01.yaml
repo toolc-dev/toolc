@@ -1,0 +1,12 @@
+# Verified live 2026-08-09. Trap: default search covers models+datasets;
+# must filter to datasets.
+id: amb-hf-01
+category: ambiguous-selection
+prompt: >
+  Find the most-downloaded DATASET (not model) on Hugging Face matching
+  "squad". Give its full id.
+grading:
+  type: contains
+  expected: "rajpurkar/squad"
+expected_tools: ["hf:hub_repo_search"]
+timeout_turns: 8

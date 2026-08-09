@@ -1,9 +1,9 @@
-import { existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
-import { createAnthropicLlm, runBench } from "@toolc/harness";
+import { conditionMode, createAnthropicLlm, runBench } from "@toolc/harness";
 import { BenchConditionSchema, type ToolcConfig, ToolcError } from "@toolc/shared";
+import { prepareConditionArtifacts } from "./ablation.js";
 
 const CLI_BIN = join(dirname(fileURLToPath(import.meta.url)), "../bin/toolc.mjs");
 
@@ -26,28 +26,37 @@ export async function benchCommand(
       "the benchmark drives a real agent loop; export the key (or source .env) first",
     );
   }
-  if (config.bench.conditions.includes("compiled") && !existsSync(config.serve.compiledPath)) {
-    throw new ToolcError(
-      `compiled artifact not found at ${config.serve.compiledPath}`,
-      "run `toolc compile` before benchmarking the compiled condition",
-    );
-  }
+
+  // Fresh artifacts for every compiled-flavor condition, from one catalog
+  // snapshot — the run never serves a stale compiled.json.
+  const artifacts = await prepareConditionArtifacts(config, (m) => console.error(m));
 
   const llm = createAnthropicLlm();
   await runBench(config, {
     llm,
     judgeLlm: llm,
-    makeTransport: (mode, runId, taskId) =>
-      new StdioClientTransport({
+    makeTransport: (condition, runId, taskId) => {
+      const mode = conditionMode(condition);
+      const artifact = artifacts.get(condition);
+      return new StdioClientTransport({
         command: process.execPath,
-        args: [CLI_BIN, "-c", configPath, "serve", "--mode", mode],
+        args: [
+          CLI_BIN,
+          "-c",
+          configPath,
+          "serve",
+          "--mode",
+          mode,
+          ...(artifact ? ["--compiled-path", artifact] : []),
+        ],
         env: {
           ...(process.env as Record<string, string>),
           TOOLC_RUN_ID: runId,
           TOOLC_TASK_ID: taskId,
         },
         stderr: "ignore",
-      }),
+      });
+    },
     log: (m) => console.error(m),
   });
 }

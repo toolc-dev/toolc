@@ -129,6 +129,12 @@ importers:
         specifier: ^3.2.0
         version: 3.2.7(@types/node@22.20.1)(tsx@4.23.5)(yaml@2.9.0)
 
+  packages/openapi-autogen:
+    dependencies:
+      '@modelcontextprotocol/server':
+        specifier: ^2.0.0
+        version: 2.0.0
+
   packages/shared:
     dependencies:
       jsonc-parser:

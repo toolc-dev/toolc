@@ -1,0 +1,12 @@
+# Live HF data; listing verified 2026-08-09. Re-verify before published runs.
+id: needle-hf-01
+category: needle
+prompt: >
+  In the Hugging Face model repository
+  hf-internal-testing/tiny-random-LlamaForCausalLM, what is the exact size of
+  the config.json file as reported by the repository listing?
+grading:
+  type: contains
+  expected: "721"
+expected_tools: ["hf:hf_fs"]
+timeout_turns: 10

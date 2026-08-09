@@ -1,0 +1,12 @@
+# Non-macro chain: read + compute. 142*3.50 + 7*12.00 + 903*0.25 + 0*45.10
+# = 497.00 + 84.00 + 225.75 + 0 = 806.75. Frozen fixture.
+id: chain-fs-02
+category: cross-server-chain
+prompt: >
+  Using the sandbox inventory, compute the total value of all stock
+  (quantity times unit price, summed across all SKUs). Give the number.
+grading:
+  type: contains
+  expected: "806.75"
+expected_tools: ["fs:read_text_file"]
+timeout_turns: 10

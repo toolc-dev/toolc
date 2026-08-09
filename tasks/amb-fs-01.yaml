@@ -1,0 +1,10 @@
+# Frozen fixture: 144 bytes, verified 2026-08-09. Trap: read vs get_file_info.
+id: amb-fs-01
+category: ambiguous-selection
+prompt: >
+  What is the exact size in bytes of the file inventory.csv in the sandbox?
+grading:
+  type: contains
+  expected: "144"
+expected_tools: ["fs:get_file_info"]
+timeout_turns: 8

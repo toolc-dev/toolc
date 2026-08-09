@@ -1,0 +1,10 @@
+# Verified against frozen sandbox 2026-08-09.
+id: single-fs-02
+category: single-tool
+prompt: >
+  What file is inside the notes directory of the sandbox?
+grading:
+  type: contains
+  expected: "project-log.md"
+expected_tools: ["fs:list_directory"]
+timeout_turns: 8

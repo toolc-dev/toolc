@@ -10,20 +10,20 @@ import { type BenchReport, buildReport, renderMarkdown } from "./report.js";
 import { runTrial } from "./runner.js";
 import { loadTasks } from "./task.js";
 
-/** Condition → gateway serve mode (spec §10). */
-export const CONDITION_MODES: Record<string, "mirror" | "compiled"> = {
-  raw: "mirror",
-  compiled: "compiled",
-};
+/** Condition → gateway serve mode (spec §10). Ablations serve compiled artifacts. */
+export function conditionMode(condition: string): "mirror" | "compiled" {
+  return condition === "raw" ? "mirror" : "compiled";
+}
 
 export interface BenchDeps {
   llm: AgentLlm;
   judgeLlm: AgentLlm;
   /**
-   * Produce a fresh MCP transport to a gateway serving `mode`, tagged with
-   * run/task ids for the call log. The harness owns connect/close.
+   * Produce a fresh MCP transport to a gateway serving `condition`, tagged
+   * with run/task ids for the call log. The harness owns connect/close.
+   * Ablation conditions map to distinct compiled artifacts (CLI's concern).
    */
-  makeTransport: (mode: "mirror" | "compiled", runId: string, taskId: string) => Transport;
+  makeTransport: (condition: string, runId: string, taskId: string) => Transport;
   log?: (message: string) => void;
 }
 
@@ -46,13 +46,11 @@ export async function runBench(config: ToolcConfig, deps: BenchDeps): Promise<Be
 
   const records: TrialRecord[] = [];
   for (const condition of bench.conditions) {
-    const mode = CONDITION_MODES[condition];
-    if (!mode) throw new Error(`unknown condition: ${condition}`);
     for (const task of tasks) {
       for (let trial = 1; trial <= bench.trials; trial++) {
         const client = new Client({ name: "toolc-harness", version: "0.0.1" });
         try {
-          await client.connect(deps.makeTransport(mode, runId, task.id));
+          await client.connect(deps.makeTransport(condition, runId, task.id));
           const result = await runTrial({
             task,
             condition,

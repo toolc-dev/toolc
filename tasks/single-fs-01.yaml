@@ -1,0 +1,11 @@
+# Verified against frozen sandbox 2026-08-09.
+id: single-fs-01
+category: single-tool
+prompt: >
+  List the names of the files (not directories) directly in the sandbox root
+  directory.
+grading:
+  type: contains
+  expected: ["inventory.csv", "README.md"]
+expected_tools: ["fs:list_directory"]
+timeout_turns: 8

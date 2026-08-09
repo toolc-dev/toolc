@@ -1,0 +1,11 @@
+# Live HF data; pinned model verified 2026-08-09. Re-verify before publishing.
+id: single-hf-02
+category: single-tool
+prompt: >
+  What task (pipeline tag) is the Hugging Face model
+  "hmellor/tiny-random-LlamaForCausalLM" tagged for?
+grading:
+  type: contains
+  expected: "text-generation"
+expected_tools: ["hf:hub_repo_search"]
+timeout_turns: 8

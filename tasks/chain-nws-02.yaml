@@ -1,0 +1,15 @@
+# Non-macro chain: the macro covers the regular forecast, NOT hourly.
+id: chain-nws-02
+category: cross-server-chain
+prompt: >
+  What is the HOURLY National Weather Service forecast for latitude 39.7456,
+  longitude -97.0892 for the next couple of hours? Give temperatures.
+grading:
+  type: judge
+  rubric: >
+    Correct iff the answer reports hourly forecast data with at least one
+    concrete temperature for that location derived from tool output. Reject
+    answers that only give the day-level forecast or refuse.
+  reference: null
+expected_tools: ["nws:point", "nws:gridpoint_forecast_hourly"]
+timeout_turns: 12

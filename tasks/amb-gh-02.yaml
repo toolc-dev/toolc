@@ -1,0 +1,10 @@
+# Stable; verified live 2026-08-09. Trap: list_branches vs repo metadata.
+id: amb-gh-02
+category: ambiguous-selection
+prompt: >
+  What is the default branch of the repository anthropics/anthropic-sdk-python?
+grading:
+  type: contains
+  expected: "main"
+expected_tools: ["github:search_repositories"]
+timeout_turns: 8

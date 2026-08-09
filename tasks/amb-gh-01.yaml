@@ -1,0 +1,11 @@
+# Verified live 2026-08-09. Trap: search_repositories vs search_code.
+id: amb-gh-01
+category: ambiguous-selection
+prompt: >
+  In the repository anthropics/anthropic-sdk-python, which file defines the
+  class AsyncAnthropic? Give the file path.
+grading:
+  type: contains
+  expected: "_client.py"
+expected_tools: ["github:search_code"]
+timeout_turns: 10

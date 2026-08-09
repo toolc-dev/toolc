@@ -1,0 +1,17 @@
+# Macro-covered (get_forecast_for_location). Live forecast: judge-graded.
+id: chain-nws-01
+category: cross-server-chain
+prompt: >
+  What is the National Weather Service forecast for latitude 39.7456,
+  longitude -97.0892? Summarize the next period's conditions in one or two
+  sentences.
+grading:
+  type: judge
+  rubric: >
+    Correct iff the answer reports an actual forecast for that location
+    derived from tool output — it must include at least a temperature value
+    or specific conditions (e.g. "sunny", "chance of showers") for a named
+    period. Reject generic statements or refusals.
+  reference: null
+expected_tools: ["nws:point", "nws:gridpoint_forecast"]
+timeout_turns: 12

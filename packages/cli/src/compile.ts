@@ -68,7 +68,7 @@ export async function compileCommand(config: ToolcConfig, opts: CompileOptions):
 }
 
 /** LLM seam for the rewrite pass; undefined when no API key is configured. */
-function makeAnthropicLlm(warn: (m: string) => void): LlmComplete | undefined {
+export function makeAnthropicLlm(warn: (m: string) => void): LlmComplete | undefined {
   if (!process.env.ANTHROPIC_API_KEY) {
     warn("ANTHROPIC_API_KEY not set — rewrite pass will serve original descriptions");
     return undefined;

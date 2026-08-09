@@ -1,0 +1,10 @@
+# Stable public fact; verified live 2026-08-09.
+id: single-gh-01
+category: single-tool
+prompt: >
+  Which GitHub organization owns the repository named "anthropic-sdk-python"?
+grading:
+  type: contains
+  expected: "anthropics"
+expected_tools: ["github:search_repositories"]
+timeout_turns: 8

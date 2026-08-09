@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
 import { loadConfig } from "@toolc/shared";
 import { beforeAll, describe, expect, it } from "vitest";
-import { type AgentLlm, runBench } from "../src/index.js";
+import { type AgentLlm, conditionMode, runBench } from "../src/index.js";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const FIXTURES = join(HERE, "fixtures");
@@ -99,10 +99,10 @@ describe("harness smoke suite (mock LLM, real gateway over MCP)", () => {
     const { report, markdown, outDir } = await runBench(config, {
       llm: mockAgent,
       judgeLlm: mockJudge,
-      makeTransport: (mode, runId, taskId) =>
+      makeTransport: (condition, runId, taskId) =>
         new StdioClientTransport({
           command: "node",
-          args: [CLI_BIN, "-c", "toolc.config.jsonc", "serve", "--mode", mode],
+          args: [CLI_BIN, "-c", "toolc.config.jsonc", "serve", "--mode", conditionMode(condition)],
           cwd: FIXTURES,
           env: {
             ...(process.env as Record<string, string>),

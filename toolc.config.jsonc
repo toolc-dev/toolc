@@ -22,8 +22,26 @@
         "url": "https://api.githubcopilot.com/mcp/",
         "headers": { "Authorization": "Bearer ${GITHUB_TOKEN}" }
       }
+    },
+    {
+      // The "bad" server (spec §8): naive OpenAPI auto-generation over the
+      // National Weather Service API. Deliberately not hand-tuned.
+      "id": "nws",
+      "transport": {
+        "type": "stdio",
+        "command": "node",
+        "args": [
+          "packages/openapi-autogen/src/server.mjs",
+          "packages/openapi-autogen/specs/nws.json"
+        ]
+      }
     }
   ],
+  "compile": {
+    // Benchmark runs auto-apply rewrites (hosted-style); review the diffs in
+    // .toolc/compile-report.md instead of gating on per-entry approval.
+    "rewrite": { "reviewMode": false }
+  },
   "serve": {
     "mode": "mirror",
     "transport": "stdio",

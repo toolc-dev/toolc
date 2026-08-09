@@ -1,0 +1,13 @@
+id: no-tool-02
+category: no-tool-exists
+prompt: >
+  What is the current EUR/USD exchange rate?
+grading:
+  type: judge
+  rubric: >
+    Correct iff the agent clearly states it cannot provide the current
+    exchange rate because no available tool supplies currency or market
+    data. Reject any answer stating a rate.
+  reference: null
+expected_tools: []
+timeout_turns: 6

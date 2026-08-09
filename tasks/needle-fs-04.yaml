@@ -1,0 +1,11 @@
+# Frozen fixture.
+id: needle-fs-04
+category: needle
+prompt: >
+  Which item in the sandbox inventory is out of stock (quantity zero)? Give
+  its name.
+grading:
+  type: contains
+  expected: "gizmo-delta"
+expected_tools: ["fs:read_text_file"]
+timeout_turns: 10

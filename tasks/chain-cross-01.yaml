@@ -1,0 +1,17 @@
+# Non-macro, genuinely cross-server (fs → github). Judge-graded.
+id: chain-cross-01
+category: cross-server-chain
+prompt: >
+  Find the vendor named in the sandbox project log, then search GitHub for
+  repositories whose name matches that vendor name. Report the vendor and
+  whether any matching repositories exist (name one if so).
+grading:
+  type: judge
+  rubric: >
+    Correct iff the answer (a) identifies Northwind (Northwind Analytics) as
+    the vendor from the sandbox log, and (b) reports a GitHub search outcome
+    for that name — either naming at least one matching repository or
+    stating that none were found, derived from tool output.
+  reference: null
+expected_tools: ["fs:read_text_file", "github:search_repositories"]
+timeout_turns: 14

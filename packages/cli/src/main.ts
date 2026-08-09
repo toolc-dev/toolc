@@ -11,7 +11,8 @@ program
   .command("serve")
   .description("run the gateway MCP server")
   .option("--mode <mode>", "mirror | compiled (overrides config)")
-  .action(async (opts: { mode?: string }) => {
+  .option("--compiled-path <path>", "compiled artifact to serve (overrides config)")
+  .action(async (opts: { mode?: string; compiledPath?: string }) => {
     const config = loadConfig(program.opts().config);
     if (opts.mode) {
       if (opts.mode !== "mirror" && opts.mode !== "compiled") {
@@ -19,6 +20,7 @@ program
       }
       config.serve.mode = opts.mode as "mirror" | "compiled";
     }
+    if (opts.compiledPath) config.serve.compiledPath = opts.compiledPath;
     await serveStdio(config);
     // Keep the process alive; the transport owns stdin.
   });

@@ -1,0 +1,10 @@
+# Verified live 2026-08-09.
+id: amb-nws-02
+category: ambiguous-selection
+prompt: >
+  What NWS forecast zone id covers latitude 39.7456, longitude -97.0892?
+grading:
+  type: contains
+  expected: "KSZ009"
+expected_tools: ["nws:point"]
+timeout_turns: 8

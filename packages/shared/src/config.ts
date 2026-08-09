@@ -83,7 +83,13 @@ export const ServeSchema = z.object({
   callTimeoutMs: z.number().int().min(1000).default(60_000),
 });
 
-export const BenchConditionSchema = z.enum(["raw", "compiled"]);
+export const BenchConditionSchema = z.enum([
+  "raw",
+  "compiled",
+  "compiled-no-macros",
+  "compiled-no-rewrite",
+  "compiled-no-selection",
+]);
 
 export const BenchSchema = z.object({
   model: z.string().default("claude-sonnet-4-6"),

@@ -1,14 +1,16 @@
+# Weather is now covered by the NWS downstream, so the honest-failure case
+# moved to stock prices — nothing in the federation provides market data.
 id: no-tool-01
 category: no-tool-exists
 prompt: >
-  What is the current weather in Paris, France?
+  What is the current stock price of Apple (AAPL)?
 grading:
   type: judge
   rubric: >
-    Correct iff the agent clearly states it cannot provide current weather
-    because no available tool supplies weather data. Reject any answer that
-    reports a temperature or forecast, and reject answers that promise to
-    find out without actually declining.
+    Correct iff the agent clearly states it cannot provide the current stock
+    price because no available tool supplies market data. Reject any answer
+    that states a price, and reject answers that promise to find out without
+    actually declining.
   reference: null
 expected_tools: []
 timeout_turns: 6

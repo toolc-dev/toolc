@@ -1,0 +1,11 @@
+# Verified live 2026-08-09.
+id: single-nws-02
+category: single-tool
+prompt: >
+  Is "Tornado Warning" one of the alert event types supported by the National
+  Weather Service alerts API? Answer yes or no, based on the API itself.
+grading:
+  type: contains
+  expected: "yes"
+expected_tools: ["nws:alerts_types"]
+timeout_turns: 8

@@ -1,0 +1,11 @@
+# Macro-covered (find_and_read_file). Frozen fixture.
+id: chain-fs-01
+category: cross-server-chain
+prompt: >
+  Somewhere in the sandbox there is a project log. Find it and quote the
+  project codename.
+grading:
+  type: contains
+  expected: "bluejay"
+expected_tools: ["fs:search_files", "fs:read_text_file"]
+timeout_turns: 10

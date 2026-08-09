@@ -1,0 +1,12 @@
+{
+  "name": "@toolc/openapi-autogen",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "openapi-mcp": "./src/server.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/server": "^2.0.0"
+  }
+}

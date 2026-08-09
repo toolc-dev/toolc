@@ -1,0 +1,11 @@
+# Trap: fs search_files matches NAMES only; finding content requires reading.
+id: amb-fs-02
+category: ambiguous-selection
+prompt: >
+  Which file in the sandbox mentions the codename "bluejay"? Give the file
+  name.
+grading:
+  type: contains
+  expected: "project-log"
+expected_tools: ["fs:directory_tree", "fs:read_text_file"]
+timeout_turns: 10

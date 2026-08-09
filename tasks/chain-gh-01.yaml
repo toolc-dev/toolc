@@ -1,0 +1,16 @@
+# Macro-covered (get_latest_release_notes). Live data: judge-graded.
+id: chain-gh-01
+category: cross-server-chain
+prompt: >
+  What is the tag name of the latest published release of the GitHub
+  repository matching "modelcontextprotocol typescript-sdk"?
+grading:
+  type: judge
+  rubric: >
+    Correct iff the answer states a concrete release tag (a version-like
+    string) attributed to the modelcontextprotocol/typescript-sdk repository,
+    derived from tool output. Reject guesses without a specific tag and
+    reject answers about a different repository.
+  reference: null
+expected_tools: ["github:search_repositories", "github:get_latest_release"]
+timeout_turns: 12

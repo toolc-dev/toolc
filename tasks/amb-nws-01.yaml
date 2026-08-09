@@ -1,0 +1,11 @@
+# Verified live 2026-08-09. Trap: zone tools vs point tool.
+id: amb-nws-01
+category: ambiguous-selection
+prompt: >
+  What is the NWS forecast zone id (format XXZNNN) that covers the point at
+  latitude 39.05, longitude -95.68?
+grading:
+  type: contains
+  expected: "KSZ039"
+expected_tools: ["nws:point"]
+timeout_turns: 8
