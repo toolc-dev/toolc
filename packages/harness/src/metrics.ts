@@ -67,7 +67,8 @@ export function aggregate(condition: string, records: TrialRecord[]): ConditionM
 
   const byCategory: ConditionMetrics["byCategory"] = {};
   for (const r of records) {
-    const bucket = (byCategory[r.category] ??= { n: 0, successes: 0, successRate: 0 });
+    byCategory[r.category] ??= { n: 0, successes: 0, successRate: 0 };
+    const bucket = byCategory[r.category]!;
     bucket.n++;
     if (r.pass) bucket.successes++;
   }
