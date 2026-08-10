@@ -48,7 +48,7 @@ export async function introspectSource(
   } catch (err) {
     throw new DownstreamError(
       downstream.id,
-      `failed to connect: ${err instanceof Error ? err.message : String(err)}`,
+      `failed to connect: ${describeError(err)}`,
       downstream.transport.type === "http"
         ? "check the URL and auth headers; run with --skip-unavailable to compile without it"
         : "check the command exists; run with --skip-unavailable to compile without it",
@@ -131,4 +131,16 @@ export async function buildGraph(
     tools: results.flatMap((r) => r.tools),
     edges: [],
   });
+}
+
+/** Include the cause chain — "fetch failed" alone is useless in logs. */
+function describeError(err: unknown): string {
+  if (!(err instanceof Error)) return String(err);
+  const parts = [err.message];
+  let cause: unknown = err.cause;
+  for (let depth = 0; cause && depth < 3; depth++) {
+    parts.push(cause instanceof Error ? cause.message : String(cause));
+    cause = cause instanceof Error ? cause.cause : undefined;
+  }
+  return parts.join(" ← ");
 }
