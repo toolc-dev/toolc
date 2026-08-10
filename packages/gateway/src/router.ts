@@ -17,7 +17,7 @@ import {
 import { ToolcError } from "@toolc/shared";
 import { Ajv2020, type ValidateFunction } from "ajv/dist/2020.js";
 import type { DownstreamPool } from "./downstream.js";
-import type { CallLog } from "./log.js";
+import type { CallSink } from "./log.js";
 
 /**
  * Namespacing separator for served passthrough tool names. Some clients reject
@@ -59,7 +59,7 @@ export class Router {
     private graph: CapabilityGraph,
     private mode: ServeMode,
     private pool: DownstreamPool,
-    private log: CallLog,
+    private log: CallSink,
     private ctx: RouterContext,
     opts: RouterOptions = {},
   ) {
@@ -109,7 +109,7 @@ export class Router {
     parentId: number | null,
   ): Promise<CallToolResult> {
     const started = performance.now();
-    const callId = this.log.begin({
+    const callId = await this.log.begin({
       ts: new Date().toISOString(),
       sessionId: this.ctx.sessionId,
       runId: this.ctx.runId,
@@ -132,7 +132,7 @@ export class Router {
     }
 
     const isError = result.isError === true;
-    this.log.finish(callId, {
+    await this.log.finish(callId, {
       resultBytes: Buffer.byteLength(JSON.stringify(result.content ?? [])),
       isError,
       errorText: isError ? (thrown ?? firstText(result)) : null,

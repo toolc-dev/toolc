@@ -26,6 +26,22 @@ export interface CallRow extends CallRecord {
   id: number;
 }
 
+/**
+ * What the Router needs from a call logger. The engine's SQLite CallLog
+ * implements it synchronously; hosted deployments implement it against
+ * Postgres (async) — the Router awaits either.
+ */
+export interface CallSink {
+  begin(
+    call: Omit<CallRecord, "resultBytes" | "isError" | "errorText" | "latencyMs">,
+  ): number | Promise<number>;
+  finish(
+    id: number,
+    outcome: Pick<CallRecord, "resultBytes" | "isError" | "errorText" | "latencyMs">,
+  ): void | Promise<void>;
+  close?(): void | Promise<void>;
+}
+
 const ARGS_JSON_MAX_BYTES = 8 * 1024;
 
 export class CallLog {

@@ -11,14 +11,14 @@ import {
 } from "@toolc/core";
 import { type ToolcConfig, ToolcError } from "@toolc/shared";
 import { DownstreamPool } from "./downstream.js";
-import { CallLog } from "./log.js";
+import { CallLog, type CallSink } from "./log.js";
 import { Router, type ServeMode } from "./router.js";
 
 export interface GatewayOptions {
   graph: CapabilityGraph;
   mode: ServeMode;
   pool: DownstreamPool;
-  log: CallLog;
+  log: CallSink;
   /** search_tools default result count (compiled mode). */
   searchTopK?: number;
   macros?: AnyMacroDefinition[];
@@ -64,7 +64,7 @@ export function createGateway(opts: GatewayOptions): Gateway {
     close: async () => {
       await server.close().catch(() => {});
       await opts.pool.close();
-      opts.log.close();
+      await opts.log.close?.();
     },
   };
 }
