@@ -6,6 +6,7 @@
 //
 // Usage: node packages/cli/scripts/regrade.mjs <runDir> [configPath]
 import { register } from "tsx/esm/api";
+
 register();
 
 const { readFileSync, writeFileSync } = await import("node:fs");
