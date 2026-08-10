@@ -85,8 +85,8 @@ export const ServeSchema = z.object({
   compaction: z
     .object({
       enabled: z.boolean().default(false),
-      /** Threshold and target size in estimated tokens (~4 chars/token). */
-      maxResultTokens: z.number().int().min(200).max(50_000).default(2_000),
+      /** Results above this size (estimated tokens) get compacted; no fixed output budget. */
+      triggerTokens: z.number().int().min(500).max(200_000).default(10_000),
       model: z.string().default("claude-haiku-4-5"),
       /** Custom system prompt; null serves the built-in default. */
       prompt: z.string().nullable().default(null),

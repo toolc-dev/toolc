@@ -11,14 +11,14 @@ const big = (n: number) => "x".repeat(n);
 describe("compactResult", () => {
   it("passes small results through untouched", async () => {
     const result = { content: [{ type: "text" as const, text: "small" }] };
-    const out = await compactResult(result, { toolName: "t", args: {} }, { maxResultTokens: 2000, model: "m" });
+    const out = await compactResult(result, { toolName: "t", args: {} }, { triggerTokens: 2000, model: "m" });
     expect(out.compacted).toBe(false);
     expect(out.result).toBe(result);
   });
 
   it("never compacts error results", async () => {
     const result = { content: [{ type: "text" as const, text: big(50_000) }], isError: true };
-    const out = await compactResult(result, { toolName: "t", args: {} }, { maxResultTokens: 100, model: "m" });
+    const out = await compactResult(result, { toolName: "t", args: {} }, { triggerTokens: 100, model: "m" });
     expect(out.compacted).toBe(false);
   });
 
@@ -28,7 +28,7 @@ describe("compactResult", () => {
       { content: [{ type: "text" as const, text: big(20_000) }] },
       { toolName: "hf:search", args: { q: "tts" } },
       {
-        maxResultTokens: 500,
+        triggerTokens: 500,
         model: "claude-haiku-4-5",
         prompt: "Custom compaction rules.",
         llm: async (args) => {
@@ -39,7 +39,7 @@ describe("compactResult", () => {
     );
     expect(out).toMatchObject({ compacted: true, strategy: "llm" });
     expect(seen[0]!.model).toBe("claude-haiku-4-5");
-    expect(seen[0]!.system).toContain("Custom compaction rules.");
+    expect(seen[0]!.system).toBe("Custom compaction rules.");
     expect(seen[0]!.prompt).toContain("hf:search");
     const text = (out.result.content![0] as { text: string }).text;
     expect(text).toContain("auto-compaction");
@@ -51,9 +51,18 @@ describe("compactResult", () => {
     await compactResult(
       { content: [{ type: "text" as const, text: big(20_000) }] },
       { toolName: "t", args: {} },
-      { maxResultTokens: 500, model: "m", prompt: null, llm: async (a) => (seen.push(a), "ok") },
+      { triggerTokens: 500, model: "m", prompt: null, llm: async (a) => (seen.push(a), "ok") },
     );
     expect(seen[0]!.system).toContain(DEFAULT_COMPACTION_PROMPT.slice(0, 40));
+  });
+
+  it("keeps structural fallback when the LLM output does not shrink the result", async () => {
+    const out = await compactResult(
+      { content: [{ type: "text" as const, text: big(20_000) }] },
+      { toolName: "t", args: {} },
+      { triggerTokens: 500, model: "m", llm: async () => big(30_000) },
+    );
+    expect(out).toMatchObject({ compacted: true, strategy: "structural" });
   });
 
   it("falls back to structural compaction when the LLM fails", async () => {
@@ -61,7 +70,7 @@ describe("compactResult", () => {
       { content: [{ type: "text" as const, text: big(20_000) }] },
       { toolName: "t", args: {} },
       {
-        maxResultTokens: 500,
+        triggerTokens: 500,
         model: "m",
         llm: async () => {
           throw new Error("rate limited");

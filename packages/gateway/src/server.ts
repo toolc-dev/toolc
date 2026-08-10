@@ -132,7 +132,7 @@ export async function serveStdio(
     searchTopK: config.compile.selection.topK,
     macros,
     compaction: c.enabled
-      ? { maxResultTokens: c.maxResultTokens, model: c.model, prompt: c.prompt, llm: deps.llm }
+      ? { triggerTokens: c.triggerTokens, model: c.model, prompt: c.prompt, llm: deps.llm }
       : null,
     runId: process.env.TOOLC_RUN_ID ?? null,
     taskId: process.env.TOOLC_TASK_ID ?? null,

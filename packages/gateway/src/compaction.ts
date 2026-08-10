@@ -11,8 +11,12 @@ import type { LlmComplete } from "@toolc/core";
  */
 
 export interface CompactionOptions {
-  /** Threshold and target size, in estimated tokens (~4 chars/token). */
-  maxResultTokens: number;
+  /**
+   * Results above this size (estimated tokens, ~4 chars/token) get compacted.
+   * There is no enforced output budget: the model compacts as far as it can
+   * without dropping task-relevant content.
+   */
+  triggerTokens: number;
   model: string;
   /** System prompt; null/absent → DEFAULT_COMPACTION_PROMPT. */
   prompt?: string | null;
@@ -20,7 +24,7 @@ export interface CompactionOptions {
 }
 
 export const COMPACTION_DEFAULT_MODEL = "claude-haiku-4-5";
-export const COMPACTION_DEFAULT_MAX_TOKENS = 2_000;
+export const COMPACTION_DEFAULT_TRIGGER_TOKENS = 10_000;
 
 export const DEFAULT_COMPACTION_PROMPT = `You compact oversized tool results for an AI agent mid-task.
 The agent called a tool and the result is too large to keep in context.
@@ -28,6 +32,7 @@ Rewrite the result so the agent can still complete its task:
 - Preserve every fact relevant to the tool call's arguments: identifiers, names, numbers, dates, URLs, error messages.
 - Preserve overall structure (lists stay lists) but drop boilerplate, repeated fields, markup, and padding.
 - Never invent or infer content that is not in the result.
+There is no fixed length target: compact as far as you can without losing anything the agent may need, and no further.
 Return only the compacted result, no preamble.`;
 
 /** Rough token estimate: ~4 characters per token. */
@@ -61,28 +66,33 @@ export async function compactResult(
     .map((b) => b.text)
     .join("\n");
   const originalTokens = estimateTokens(text);
-  if (originalTokens <= opts.maxResultTokens) return { result, compacted: false };
+  if (originalTokens <= opts.triggerTokens) return { result, compacted: false };
 
   const nonText = blocks.filter((b) => b.type !== "text");
-  const marker = (strategy: string) =>
-    `[toolc auto-compaction: result compacted from ~${originalTokens} to ≤${opts.maxResultTokens} tokens (${strategy})]\n`;
+  const marker = (strategy: string, toTokens: number) =>
+    `[toolc auto-compaction: result compacted from ~${originalTokens} to ~${toTokens} tokens (${strategy})]\n`;
 
   if (opts.llm) {
     try {
       const compacted = await opts.llm({
         model: opts.model,
-        system: `${opts.prompt?.trim() || DEFAULT_COMPACTION_PROMPT}\n\nStay under ${opts.maxResultTokens} tokens.`,
+        system: opts.prompt?.trim() || DEFAULT_COMPACTION_PROMPT,
         prompt:
           `Tool: ${call.toolName}\nArguments: ${JSON.stringify(call.args)}\n\n` +
           `Result:\n${text.slice(0, MAX_LLM_INPUT_CHARS)}` +
           (text.length > MAX_LLM_INPUT_CHARS ? "\n…[input truncated before compaction]" : ""),
-        maxTokens: Math.min(opts.maxResultTokens + 500, 32_000),
+        maxTokens: Math.min(Math.max(Math.ceil(originalTokens * 0.8), 4_000), 32_000),
       });
-      if (compacted.trim().length > 0) {
+      const compactedTokens = estimateTokens(compacted);
+      // Only serve the compaction if it actually shrank the result.
+      if (compacted.trim().length > 0 && compactedTokens < originalTokens) {
         return {
           result: {
             ...result,
-            content: [{ type: "text", text: marker("llm") + compacted.trim() }, ...nonText],
+            content: [
+              { type: "text", text: marker("llm", compactedTokens) + compacted.trim() },
+              ...nonText,
+            ],
           },
           compacted: true,
           strategy: "llm",
@@ -94,11 +104,12 @@ export async function compactResult(
     }
   }
 
+  const structural = structuralCompact(text, opts.triggerTokens);
   return {
     result: {
       ...result,
       content: [
-        { type: "text", text: marker("structural") + structuralCompact(text, opts.maxResultTokens) },
+        { type: "text", text: marker("structural", estimateTokens(structural)) + structural },
         ...nonText,
       ],
     },
