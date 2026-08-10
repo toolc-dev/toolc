@@ -30,6 +30,7 @@ export const DEFAULT_COMPACTION_PROMPT = `You compact oversized tool results for
 The agent called a tool and the result is too large to keep in context.
 Rewrite the result so the agent can still complete its task:
 - Preserve every fact relevant to the tool call's arguments: identifiers, names, numbers, dates, URLs, error messages.
+- Preserve everything needed to source and cite the response: record and entity IDs, permalinks, document and section references, titles, authors, and timestamps. The agent must be able to attribute every claim and fetch the full record with a follow-up call.
 - Preserve overall structure (lists stay lists) but drop boilerplate, repeated fields, markup, and padding.
 - Never invent or infer content that is not in the result.
 There is no fixed length target: compact as far as you can without losing anything the agent may need, and no further.

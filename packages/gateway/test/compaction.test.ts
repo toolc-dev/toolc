@@ -54,6 +54,7 @@ describe("compactResult", () => {
       { triggerTokens: 500, model: "m", prompt: null, llm: async (a) => (seen.push(a), "ok") },
     );
     expect(seen[0]!.system).toContain(DEFAULT_COMPACTION_PROMPT.slice(0, 40));
+    expect(seen[0]!.system).toContain("source and cite");
   });
 
   it("keeps structural fallback when the LLM output does not shrink the result", async () => {
