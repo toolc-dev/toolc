@@ -67,7 +67,7 @@ export const CompileSchema = z.object({
       /** Groups smaller than this are rejected. */
       minGroupSize: z.number().int().min(2).default(2),
       /** Groups larger than this are rejected (over-merging hurts). */
-      maxGroupSize: z.number().int().min(2).default(8),
+      maxGroupSize: z.number().int().min(2).default(12),
     })
     .prefault({}),
   macroInline: z

@@ -19,7 +19,7 @@ Rules:
 - Only merge tools that operate on the same domain object or capability (e.g. search_research / find_research / get_research; or a swarm of small enum-lookup tools).
 - Never merge tools with clashing semantics, side effects, or unrelated result shapes. Read-only lookups and mutating operations never share a facade.
 - 2 to MAX_GROUP members per group. A tool appears in at most one group. Leave every tool that has no natural family alone.
-- Group name: a short domain noun (e.g. "research", "filings"). Action names: short verbs or noun_verbs, unique within the group, snake_case.
+- Group name: a short domain noun (e.g. "research", "filings") that is NOT the name of any existing tool. Action names: short verbs or noun_verbs, unique within the group, snake_case.
 - Group description: first line states what the facade covers and returns, max 320 characters. Then one line per action: what it does and when to choose it over the siblings. Never invent capabilities.
 
 Respond with one block per group, exactly in this format (no other prose):
@@ -104,11 +104,21 @@ export const consolidatePass: Pass = async (graph, config, ctx) => {
         claimed.add(memberName);
       }
 
-      const facadeId = toolId(source.id, group.name);
+      // LLMs naturally name a family after its base tool ("sigmet" facade
+      // over sigmet/sigmet_by_atsu). When the collision is with a member
+      // being merged away, suffix instead of rejecting.
+      let facadeName = group.name;
+      if (
+        existingIds.has(toolId(source.id, facadeName)) &&
+        claimedBy(group, facadeName)
+      ) {
+        facadeName = `${facadeName}_api`;
+      }
+      const facadeId = toolId(source.id, facadeName);
       const facade: ToolNode = {
         id: facadeId,
         source: source.id,
-        name: group.name,
+        name: facadeName,
         description: buildFacadeDescription(group, byName),
         inputSchema: facadeSchema(Object.keys(actions)),
         overlays: {},
@@ -180,8 +190,13 @@ function validateGroup(
   },
 ): string | null {
   if (!/^[a-z][a-z0-9_]*$/.test(group.name)) return `invalid group name "${group.name}"`;
-  if (ctx.existingIds.has(toolId(ctx.sourceId, group.name)))
-    return `name collides with existing tool id`;
+  const collides = ctx.existingIds.has(toolId(ctx.sourceId, group.name));
+  const namedAfterMember = [...group.members.values()].includes(group.name);
+  // Collision with a member being merged away is fine (renamed to <name>_api),
+  // unless that fallback is taken too.
+  if (collides && !namedAfterMember) return "name collides with existing tool id";
+  if (collides && namedAfterMember && ctx.existingIds.has(toolId(ctx.sourceId, `${group.name}_api`)))
+    return "name collides and the _api fallback is taken";
   if (group.members.size < ctx.minGroupSize || group.members.size > ctx.maxGroupSize)
     return `${group.members.size} member(s), need ${ctx.minGroupSize}-${ctx.maxGroupSize}`;
   const names = new Set(ctx.candidates.map((t) => t.name));
