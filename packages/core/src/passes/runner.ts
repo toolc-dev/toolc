@@ -2,6 +2,7 @@ import type { PassName, ToolcConfig } from "@toolc/shared";
 import { ToolcError } from "@toolc/shared";
 import { withVersion } from "../ir/serialize.js";
 import type { CapabilityGraph } from "../ir/types.js";
+import { consolidatePass } from "./consolidate.js";
 import { deadToolPass } from "./dead-tool.js";
 import { macroInlinePass } from "./macro-inline.js";
 import { rewritePass } from "./rewrite.js";
@@ -11,6 +12,7 @@ import type { Pass, PassContext, PassDiff } from "./types.js";
 const PASSES: Record<PassName, Pass> = {
   "dead-tool": deadToolPass,
   rewrite: rewritePass,
+  consolidate: consolidatePass,
   "macro-inline": macroInlinePass,
   selection: selectionPass,
 };

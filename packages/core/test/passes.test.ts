@@ -2,6 +2,7 @@ import { parseConfig } from "@toolc/shared";
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 import {
+  consolidatePass,
   createMemoryRewriteCache,
   deadToolPass,
   enforceSummaryLimit,
@@ -12,6 +13,7 @@ import {
   rewriteCacheKey,
   rewritePass,
   runPasses,
+  searchableTools,
   selectionPass,
   servedTools,
   surfaceStats,
@@ -252,5 +254,84 @@ describe("full pipeline (runPasses)", () => {
     expect(stats.searchableCount).toBe(9); // 12 - 3 hidden
     expect(stats.hiddenCount).toBe(3);
     expect(stats.servedTokens).toBeLessThan(stats.mirrorTokens);
+  });
+});
+
+describe("consolidatePass", () => {
+  const groupBlock = (name: string, members: string, desc: string) =>
+    `<<<GROUP ${name}>>>\n<<<MEMBERS>>>\n${members}\n<<<DESCRIPTION>>>\n${desc}\n<<<END>>>`;
+
+  it("synthesizes a facade, hides members, and documents action params", async () => {
+    const llm = async () =>
+      groupBlock(
+        "transcripts",
+        "search = search_transcripts\nget = get_transcript",
+        "Search or fetch earnings-call transcripts.",
+      );
+    const { graph, diff } = await consolidatePass(fixtureFederationGraph(), config(), ctx({ llm }));
+
+    const facade = graph.tools.find((t) => t.id === "finco:transcripts")!;
+    expect(facade.kind).toBe("facade");
+    expect(facade.facade?.actions).toEqual({
+      search: "finco:search_transcripts",
+      get: "finco:get_transcript",
+    });
+    const actionProp = (facade.inputSchema.properties as Record<string, { enum?: string[] }>)
+      .action;
+    expect(actionProp?.enum).toEqual(["search", "get"]);
+    expect(facade.description).toContain("Action parameters");
+    expect(facade.description).toContain("search(");
+    expect(diff.added).toEqual(["finco:transcripts"]);
+    expect(diff.hidden.sort()).toEqual(["finco:get_transcript", "finco:search_transcripts"]);
+    for (const id of diff.hidden) {
+      const member = graph.tools.find((t) => t.id === id)!;
+      expect(member.overlays.hidden).toBe(true);
+      expect(member.overlays.hiddenReason).toContain("finco:transcripts");
+    }
+  });
+
+  it("rejects groups with unknown members, collisions, or reused members", async () => {
+    const warnings: string[] = [];
+    const llm = async () =>
+      [
+        groupBlock("bogus", "a = does_not_exist\nb = find_events", "Bad members."),
+        groupBlock("find_companies", "a = find_events\nb = search_transcripts", "Name collides."),
+        groupBlock("events", "find = find_events\nsearch = search_transcripts", "Valid group."),
+        groupBlock("again", "x = find_events\ny = find_companies", "Reuses a claimed member."),
+      ].join("\n");
+    const { graph, diff } = await consolidatePass(
+      fixtureFederationGraph(),
+      config(),
+      ctx({ llm, warn: (m) => warnings.push(m) }),
+    );
+    expect(diff.added).toEqual(["finco:events"]);
+    expect(graph.tools.some((t) => t.id === "finco:bogus")).toBe(false);
+    expect(warnings.some((w) => w.includes("does_not_exist"))).toBe(true);
+    expect(warnings.some((w) => w.includes("collides"))).toBe(true);
+    expect(warnings.some((w) => w.includes("already belongs"))).toBe(true);
+  });
+
+  it("is a warning no-op without an LLM", async () => {
+    const before = fixtureFederationGraph();
+    const { graph, diff } = await consolidatePass(before, config(), ctx());
+    expect(graph.tools).toEqual(before.tools);
+    expect(diff.notes[0]).toContain("skipped");
+  });
+
+  it("facades survive selection as searchable, members do not", async () => {
+    const llm = async () =>
+      groupBlock(
+        "transcripts",
+        "search = search_transcripts\nget = get_transcript",
+        "Transcripts facade.",
+      );
+    const cfg = config({ compile: { passes: ["consolidate", "selection"], macrosDir: "/nonexistent" } });
+    const { graph } = await runPasses(fixtureFederationGraph(), cfg, {
+      ...ctx({ llm }),
+      macros: [],
+    });
+    const searchable = searchableTools(graph).map((t) => t.id);
+    expect(searchable).toContain("finco:transcripts");
+    expect(searchable).not.toContain("finco:search_transcripts");
   });
 });

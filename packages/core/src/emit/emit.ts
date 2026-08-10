@@ -13,9 +13,11 @@ export function servedTools(graph: CapabilityGraph): ToolNode[] {
   return graph.tools.filter((t) => isVisible(t) && t.overlays.surfaced !== false);
 }
 
-/** Tools reachable through search_tools/call_tool (visible passthrough). */
+/** Tools reachable through search_tools/call_tool (visible passthrough + facades). */
 export function searchableTools(graph: CapabilityGraph): ToolNode[] {
-  return graph.tools.filter((t) => t.kind === "passthrough" && isVisible(t));
+  return graph.tools.filter(
+    (t) => (t.kind === "passthrough" || t.kind === "facade") && isVisible(t),
+  );
 }
 
 /**

@@ -34,7 +34,13 @@ export const DownstreamSchema = z.object({
 
 // --- Compile ------------------------------------------------------------------
 
-export const PassNameSchema = z.enum(["dead-tool", "rewrite", "macro-inline", "selection"]);
+export const PassNameSchema = z.enum([
+  "dead-tool",
+  "rewrite",
+  "consolidate",
+  "macro-inline",
+  "selection",
+]);
 
 export const CompileSchema = z.object({
   passes: z.array(PassNameSchema).default(["dead-tool", "rewrite", "macro-inline", "selection"]),
@@ -53,6 +59,15 @@ export const CompileSchema = z.object({
       model: z.string().default("claude-sonnet-4-6"),
       cachePath: z.string().default(".toolc/rewrites.json"),
       reviewMode: z.boolean().default(true),
+    })
+    .prefault({}),
+  consolidate: z
+    .object({
+      model: z.string().default("claude-sonnet-4-6"),
+      /** Groups smaller than this are rejected. */
+      minGroupSize: z.number().int().min(2).default(2),
+      /** Groups larger than this are rejected (over-merging hurts). */
+      maxGroupSize: z.number().int().min(2).default(8),
     })
     .prefault({}),
   macroInline: z
@@ -100,6 +115,8 @@ export const BenchConditionSchema = z.enum([
   "compiled-no-macros",
   "compiled-no-rewrite",
   "compiled-no-selection",
+  "compiled-consolidate",
+  "consolidate-no-selection",
 ]);
 
 export const BenchSchema = z.object({

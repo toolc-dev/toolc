@@ -173,7 +173,38 @@ export class Router {
         throw new ToolcError(`unknown meta tool: ${node.name}`);
       case "macro":
         return this.executeMacro(node, args, callId);
+      case "facade":
+        return this.executeFacade(node, args, callId);
     }
+  }
+
+  // --- facade (consolidate pass) ---------------------------------------------
+
+  private async executeFacade(
+    node: ToolNode,
+    args: Record<string, unknown>,
+    callId: number,
+  ): Promise<CallToolResult> {
+    const actions = node.facade?.actions ?? {};
+    const action = args.action;
+    if (typeof action !== "string" || !(action in actions)) {
+      return errorResult(
+        `${node.name} requires {"action": <one of: ${Object.keys(actions).join(", ")}>, "arguments": {...}}. See the tool description for each action's parameters.`,
+      );
+    }
+    const target = this.byToolId.get(actions[action]!);
+    if (!target) {
+      throw new ToolcError(
+        `facade ${node.id} routes action "${action}" to missing tool ${actions[action]}`,
+      );
+    }
+    const innerArgs =
+      args.arguments !== null && typeof args.arguments === "object"
+        ? (args.arguments as Record<string, unknown>)
+        : {};
+    const invalid = this.validateArgs(target, innerArgs);
+    if (invalid) return errorResult(invalid);
+    return this.dispatchNode(target, innerArgs, callId);
   }
 
   // --- search_tools -----------------------------------------------------------
@@ -219,7 +250,7 @@ export class Router {
       );
     }
     const target = this.byToolId.get(name);
-    if (target?.kind !== "passthrough" || !isVisible(target)) {
+    if ((target?.kind !== "passthrough" && target?.kind !== "facade") || !isVisible(target)) {
       const suggestions = this.retriever?.search(name.replaceAll(/[_:]/g, " "), 3) ?? [];
       return errorResult(
         `unknown tool "${name}".` +
@@ -312,7 +343,11 @@ export class Router {
 }
 
 export function servedName(tool: ToolNode): string {
-  return tool.kind === "passthrough" ? `${tool.source}${NS_SEP}${tool.name}` : tool.name;
+  // Facades are namespaced like passthroughs: they belong to one source and
+  // bare names could collide across sources ("research" on two servers).
+  return tool.kind === "passthrough" || tool.kind === "facade"
+    ? `${tool.source}${NS_SEP}${tool.name}`
+    : tool.name;
 }
 
 function textResult(text: string): CallToolResult {

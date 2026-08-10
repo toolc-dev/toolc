@@ -58,7 +58,7 @@ export const OverlaysSchema = z.object({
 });
 export type Overlays = z.infer<typeof OverlaysSchema>;
 
-export const ToolKindSchema = z.enum(["passthrough", "macro", "meta"]);
+export const ToolKindSchema = z.enum(["passthrough", "macro", "meta", "facade"]);
 export type ToolKind = z.infer<typeof ToolKindSchema>;
 
 export const ToolNodeSchema = z.object({
@@ -74,6 +74,11 @@ export const ToolNodeSchema = z.object({
   annotations: ToolAnnotationsSchema.optional(),
   overlays: OverlaysSchema,
   kind: ToolKindSchema,
+  /**
+   * Facade routing (consolidate pass): action name → member tool id. The
+   * members stay in the graph, hidden; dispatch is deterministic.
+   */
+  facade: z.object({ actions: z.record(z.string(), z.string()) }).optional(),
 });
 export type ToolNode = z.infer<typeof ToolNodeSchema>;
 

@@ -18,6 +18,23 @@ const ABLATION_DROP: Record<string, PassName> = {
   "compiled-no-selection": "selection",
 };
 
+/** Condition → explicit pass list, for conditions that add passes. */
+function conditionPasses(condition: string, base: PassName[]): PassName[] {
+  const withConsolidate = (list: PassName[]): PassName[] => {
+    if (list.includes("consolidate")) return list;
+    // Consolidate runs after rewrite (merges see rewritten descriptions).
+    const at = list.indexOf("rewrite");
+    const out = [...list];
+    out.splice(at === -1 ? 0 : at + 1, 0, "consolidate");
+    return out;
+  };
+  if (condition === "compiled-consolidate") return withConsolidate(base);
+  if (condition === "consolidate-no-selection")
+    return withConsolidate(base.filter((p) => p !== "selection"));
+  const drop = ABLATION_DROP[condition];
+  return drop ? base.filter((p) => p !== drop) : base;
+}
+
 /**
  * Compile one artifact per non-raw condition from a SINGLE catalog snapshot,
  * so every condition in a run sees identical downstream catalogs. Returns
@@ -38,8 +55,7 @@ export async function prepareConditionArtifacts(
   const llm = makeAnthropicLlm(warn);
 
   for (const condition of compiledConditions) {
-    const drop = ABLATION_DROP[condition];
-    const passes = drop ? config.compile.passes.filter((p) => p !== drop) : config.compile.passes;
+    const passes = conditionPasses(condition, config.compile.passes);
     const conditionConfig: ToolcConfig = {
       ...config,
       compile: { ...config.compile, passes },

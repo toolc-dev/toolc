@@ -7,6 +7,7 @@ export * from "./macros/types.js";
 export * from "./passes/dead-tool.js";
 export * from "./passes/glob.js";
 export * from "./passes/macro-inline.js";
+export * from "./passes/consolidate.js";
 export * from "./passes/rewrite.js";
 export * from "./passes/rewrite-cache.js";
 export * from "./passes/runner.js";

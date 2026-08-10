@@ -79,7 +79,7 @@ export const selectionPass: Pass = async (graph, config, _ctx) => {
   };
 
   const searchableCount = graph.tools.filter(
-    (t) => t.kind === "passthrough" && isVisible(t),
+    (t) => (t.kind === "passthrough" || t.kind === "facade") && isVisible(t),
   ).length;
 
   const tools: ToolNode[] = graph.tools.map((tool): ToolNode => {
