@@ -29,7 +29,7 @@ let changed = 0;
 let total = 0;
 for (const record of report.records) {
   const task = byId.get(record.taskId);
-  if (!task || task.grading.type !== "judge") continue;
+  if (task?.grading.type !== "judge") continue;
   total++;
   const grade = await harness.gradeAnswer(task, record.finalAnswer, judge, config.bench.judgeModel);
   if (grade.pass !== record.pass) {
