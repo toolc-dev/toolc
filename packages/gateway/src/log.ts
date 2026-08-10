@@ -17,6 +17,8 @@ export interface CallRecord {
   parentCallId: number | null;
   argsJson: string;
   resultBytes: number | null;
+  /** Capped text content of the served result (observability; null when payload logging is off). */
+  resultJson: string | null;
   isError: boolean;
   errorText: string | null;
   latencyMs: number;
@@ -33,16 +35,24 @@ export interface CallRow extends CallRecord {
  */
 export interface CallSink {
   begin(
-    call: Omit<CallRecord, "resultBytes" | "isError" | "errorText" | "latencyMs">,
+    call: Omit<CallRecord, "resultBytes" | "resultJson" | "isError" | "errorText" | "latencyMs">,
   ): number | Promise<number>;
   finish(
     id: number,
-    outcome: Pick<CallRecord, "resultBytes" | "isError" | "errorText" | "latencyMs">,
+    outcome: Pick<CallRecord, "resultBytes" | "resultJson" | "isError" | "errorText" | "latencyMs">,
   ): void | Promise<void>;
   close?(): void | Promise<void>;
 }
 
 const ARGS_JSON_MAX_BYTES = 8 * 1024;
+export const RESULT_JSON_MAX_BYTES = 16 * 1024;
+
+export function capResultJson(text: string | null): string | null {
+  if (text === null) return null;
+  return Buffer.byteLength(text) > RESULT_JSON_MAX_BYTES
+    ? `${text.slice(0, RESULT_JSON_MAX_BYTES)}…[truncated]`
+    : text;
+}
 
 export class CallLog {
   private db: Database.Database;
@@ -63,6 +73,7 @@ export class CallLog {
         parent_call_id INTEGER,
         args_json TEXT NOT NULL,
         result_bytes INTEGER,
+        result_json TEXT,
         is_error INTEGER NOT NULL,
         error_text TEXT,
         latency_ms INTEGER NOT NULL
@@ -70,6 +81,11 @@ export class CallLog {
       CREATE INDEX IF NOT EXISTS idx_calls_run ON calls(run_id, task_id);
       CREATE INDEX IF NOT EXISTS idx_calls_tool ON calls(tool_id);
     `);
+    try {
+      this.db.exec("ALTER TABLE calls ADD COLUMN result_json TEXT");
+    } catch {
+      // column already exists
+    }
   }
 
   /**
@@ -77,10 +93,13 @@ export class CallLog {
    * parent row is inserted before execution so children can reference its id
    * via parent_call_id, then finished with the outcome.
    */
-  begin(call: Omit<CallRecord, "resultBytes" | "isError" | "errorText" | "latencyMs">): number {
+  begin(
+    call: Omit<CallRecord, "resultBytes" | "resultJson" | "isError" | "errorText" | "latencyMs">,
+  ): number {
     return this.record({
       ...call,
       resultBytes: null,
+      resultJson: null,
       isError: false,
       errorText: null,
       latencyMs: -1,
@@ -89,13 +108,20 @@ export class CallLog {
 
   finish(
     id: number,
-    outcome: Pick<CallRecord, "resultBytes" | "isError" | "errorText" | "latencyMs">,
+    outcome: Pick<CallRecord, "resultBytes" | "resultJson" | "isError" | "errorText" | "latencyMs">,
   ): void {
     this.db
       .prepare(
-        "UPDATE calls SET result_bytes = ?, is_error = ?, error_text = ?, latency_ms = ? WHERE id = ?",
+        "UPDATE calls SET result_bytes = ?, result_json = ?, is_error = ?, error_text = ?, latency_ms = ? WHERE id = ?",
       )
-      .run(outcome.resultBytes, outcome.isError ? 1 : 0, outcome.errorText, outcome.latencyMs, id);
+      .run(
+        outcome.resultBytes,
+        capResultJson(outcome.resultJson),
+        outcome.isError ? 1 : 0,
+        outcome.errorText,
+        outcome.latencyMs,
+        id,
+      );
   }
 
   record(call: CallRecord): number {
@@ -106,9 +132,9 @@ export class CallLog {
     const result = this.db
       .prepare(`
         INSERT INTO calls (ts, session_id, run_id, task_id, surface, tool_id, parent_call_id,
-                           args_json, result_bytes, is_error, error_text, latency_ms)
+                           args_json, result_bytes, result_json, is_error, error_text, latency_ms)
         VALUES (@ts, @sessionId, @runId, @taskId, @surface, @toolId, @parentCallId,
-                @argsJson, @resultBytes, @isError, @errorText, @latencyMs)
+                @argsJson, @resultBytes, @resultJson, @isError, @errorText, @latencyMs)
       `)
       .run({ ...call, argsJson, isError: call.isError ? 1 : 0 });
     return Number(result.lastInsertRowid);
@@ -129,6 +155,7 @@ export class CallLog {
       parentCallId: r.parent_call_id as number | null,
       argsJson: r.args_json as string,
       resultBytes: r.result_bytes as number | null,
+      resultJson: r.result_json as string | null,
       isError: (r.is_error as number) === 1,
       errorText: r.error_text as string | null,
       latencyMs: r.latency_ms as number,

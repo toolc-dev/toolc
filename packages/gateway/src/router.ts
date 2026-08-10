@@ -152,6 +152,9 @@ export class Router {
     const isError = result.isError === true;
     await this.log.finish(callId, {
       resultBytes: Buffer.byteLength(JSON.stringify(result.content ?? [])),
+      resultJson: (result.content ?? [])
+        .map((c) => (c.type === "text" ? c.text : `[${c.type}]`))
+        .join("\n"),
       isError,
       errorText: isError ? (thrown ?? firstText(result)) : null,
       latencyMs: Math.round(performance.now() - started),
