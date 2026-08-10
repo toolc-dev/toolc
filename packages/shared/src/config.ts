@@ -81,6 +81,17 @@ export const ServeSchema = z.object({
   compiledPath: z.string().default(".toolc/compiled.json"),
   /** Per-call downstream timeout in milliseconds. */
   callTimeoutMs: z.number().int().min(1000).default(60_000),
+  /** Serve-time auto-compaction of oversized tool results (opt-in). */
+  compaction: z
+    .object({
+      enabled: z.boolean().default(false),
+      /** Threshold and target size in estimated tokens (~4 chars/token). */
+      maxResultTokens: z.number().int().min(200).max(50_000).default(2_000),
+      model: z.string().default("claude-haiku-4-5"),
+      /** Custom system prompt; null serves the built-in default. */
+      prompt: z.string().nullable().default(null),
+    })
+    .prefault({}),
 });
 
 export const BenchConditionSchema = z.enum([

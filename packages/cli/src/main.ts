@@ -1,5 +1,6 @@
 import { buildGraph, effectiveDescription, isVisible } from "@toolc/core";
 import { serveStdio } from "@toolc/gateway";
+import { makeAnthropicLlm } from "./compile.js";
 import { loadConfig, ToolcError } from "@toolc/shared";
 import { Command } from "commander";
 
@@ -21,7 +22,8 @@ program
       config.serve.mode = opts.mode as "mirror" | "compiled";
     }
     if (opts.compiledPath) config.serve.compiledPath = opts.compiledPath;
-    await serveStdio(config);
+    const warn = (m: string) => console.error(`[toolc] warn: ${m}`);
+    await serveStdio(config, { llm: makeAnthropicLlm(warn) });
     // Keep the process alive; the transport owns stdin.
   });
 

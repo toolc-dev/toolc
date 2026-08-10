@@ -16,6 +16,7 @@ import {
 } from "@toolc/core";
 import { ToolcError } from "@toolc/shared";
 import { Ajv2020, type ValidateFunction } from "ajv/dist/2020.js";
+import { type CompactionOptions, compactResult } from "./compaction.js";
 import type { DownstreamPool } from "./downstream.js";
 import type { CallSink } from "./log.js";
 
@@ -38,6 +39,12 @@ export interface RouterOptions {
   /** Default result count for search_tools (config.compile.selection.topK). */
   searchTopK?: number;
   macros?: AnyMacroDefinition[];
+  /**
+   * Auto-compact oversized results before serving (config.serve.compaction).
+   * Applies to passthrough and macro results only — meta results are the
+   * selection surface's own protocol and stay verbatim.
+   */
+  compaction?: CompactionOptions | null;
 }
 
 /**
@@ -54,6 +61,7 @@ export class Router {
   private validators = new Map<string, ValidateFunction>();
   private ajv = new Ajv2020({ strict: false, allErrors: true });
   private searchTopK: number;
+  private compaction: CompactionOptions | null;
 
   constructor(
     private graph: CapabilityGraph,
@@ -64,6 +72,7 @@ export class Router {
     opts: RouterOptions = {},
   ) {
     this.searchTopK = opts.searchTopK ?? 8;
+    this.compaction = opts.compaction ?? null;
     for (const tool of this.graph.tools) this.byToolId.set(tool.id, tool);
     for (const tool of this.servedNodes()) this.byServedName.set(servedName(tool), tool);
     for (const macro of opts.macros ?? []) this.macroRegistry.set(macro.name, macro);
@@ -129,6 +138,15 @@ export class Router {
       // error with the source identified.
       thrown = err instanceof Error ? err.message : String(err);
       result = { content: [{ type: "text", text: thrown }], isError: true };
+    }
+
+    // Auto-compaction (serve-time, opt-in). Meta results are protocol, not data.
+    if (this.compaction && node.kind !== "meta" && result.isError !== true) {
+      ({ result } = await compactResult(
+        result,
+        { toolName: node.name, args },
+        this.compaction,
+      ));
     }
 
     const isError = result.isError === true;

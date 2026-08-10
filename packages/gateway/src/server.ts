@@ -7,9 +7,11 @@ import {
   buildGraph,
   type CapabilityGraph,
   deserializeArtifact,
+  type LlmComplete,
   loadMacros,
 } from "@toolc/core";
 import { type ToolcConfig, ToolcError } from "@toolc/shared";
+import type { CompactionOptions } from "./compaction.js";
 import { DownstreamPool } from "./downstream.js";
 import { CallLog, type CallSink } from "./log.js";
 import { Router, type ServeMode } from "./router.js";
@@ -22,6 +24,8 @@ export interface GatewayOptions {
   /** search_tools default result count (compiled mode). */
   searchTopK?: number;
   macros?: AnyMacroDefinition[];
+  /** Auto-compact oversized results (config.serve.compaction). */
+  compaction?: CompactionOptions | null;
   /** Benchmark tagging; null outside harness runs. */
   runId?: string | null;
   taskId?: string | null;
@@ -45,7 +49,7 @@ export function createGateway(opts: GatewayOptions): Gateway {
       runId: opts.runId ?? null,
       taskId: opts.taskId ?? null,
     },
-    { searchTopK: opts.searchTopK, macros: opts.macros },
+    { searchTopK: opts.searchTopK, macros: opts.macros, compaction: opts.compaction },
   );
 
   const server = new Server({ name: "toolc", version: "0.0.1" }, { capabilities: { tools: {} } });
@@ -74,7 +78,10 @@ export function createGateway(opts: GatewayOptions): Gateway {
  * fresh; compiled mode loads the artifact written by `toolc compile` plus the
  * macro modules it references. Serves over stdio.
  */
-export async function serveStdio(config: ToolcConfig): Promise<Gateway> {
+export async function serveStdio(
+  config: ToolcConfig,
+  deps: { llm?: LlmComplete } = {},
+): Promise<Gateway> {
   const mode = config.serve.mode;
   let graph: CapabilityGraph;
   let macros: AnyMacroDefinition[] = [];
@@ -116,6 +123,7 @@ export async function serveStdio(config: ToolcConfig): Promise<Gateway> {
     callTimeoutMs: config.serve.callTimeoutMs,
   });
   const log = new CallLog(config.serve.logDb);
+  const c = config.serve.compaction;
   const gateway = createGateway({
     graph,
     mode,
@@ -123,6 +131,9 @@ export async function serveStdio(config: ToolcConfig): Promise<Gateway> {
     log,
     searchTopK: config.compile.selection.topK,
     macros,
+    compaction: c.enabled
+      ? { maxResultTokens: c.maxResultTokens, model: c.model, prompt: c.prompt, llm: deps.llm }
+      : null,
     runId: process.env.TOOLC_RUN_ID ?? null,
     taskId: process.env.TOOLC_TASK_ID ?? null,
   });
