@@ -18,9 +18,21 @@ export const HttpTransportSchema = z.object({
   headers: z.record(z.string(), z.string()).optional(),
 });
 
+export const OpenApiTransportSchema = z.object({
+  type: z.literal("openapi"),
+  /** OpenAPI 3.x spec: URL (hosted) or file path (CLI). */
+  spec: z.string().min(1),
+  /** Override for spec.servers[0].url. */
+  baseUrl: z.url().optional(),
+  headers: z.record(z.string(), z.string()).optional(),
+  /** Query params appended to every request (query-string API keys). */
+  query: z.record(z.string(), z.string()).optional(),
+});
+
 export const TransportSchema = z.discriminatedUnion("type", [
   StdioTransportSchema,
   HttpTransportSchema,
+  OpenApiTransportSchema,
 ]);
 
 // --- Downstream servers -------------------------------------------------------
@@ -161,6 +173,7 @@ export const ToolcConfigSchema = z.object({
 export type ToolcConfig = z.infer<typeof ToolcConfigSchema>;
 export type DownstreamConfig = z.infer<typeof DownstreamSchema>;
 export type TransportConfig = z.infer<typeof TransportSchema>;
+export type OpenApiTransportConfig = z.infer<typeof OpenApiTransportSchema>;
 export type PassName = z.infer<typeof PassNameSchema>;
 
 // --- Loading ------------------------------------------------------------------

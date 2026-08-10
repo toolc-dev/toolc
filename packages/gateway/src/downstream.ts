@@ -55,7 +55,7 @@ export class DownstreamPool {
 
     const promise = (async () => {
       const client = new Client({ name: "toolc-gateway", version: "0.0.1" });
-      await client.connect(createTransport(config.transport));
+      await client.connect(await createTransport(config.transport));
       return client;
     })();
     this.connecting.set(sourceId, promise);

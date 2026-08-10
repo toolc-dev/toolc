@@ -1,5 +1,10 @@
 import type { Transport } from "@modelcontextprotocol/client";
-import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
+import {
+  Client,
+  InMemoryTransport,
+  StreamableHTTPClientTransport,
+} from "@modelcontextprotocol/client";
+import { createOpenApiServer } from "./openapi.js";
 import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
 import { type DownstreamConfig, DownstreamError, type TransportConfig } from "@toolc/shared";
 import { contentHash, withVersion } from "../ir/serialize.js";
@@ -18,8 +23,18 @@ export interface IntrospectOptions {
   onWarn?: (message: string) => void;
 }
 
-/** Build an MCP client transport from a downstream transport config. */
-export function createTransport(config: TransportConfig): Transport {
+/**
+ * Build an MCP client transport from a downstream transport config. Async
+ * because openapi downstreams compose an in-process MCP server from the spec
+ * (fetched here) and hand back the client half of an in-memory pair.
+ */
+export async function createTransport(config: TransportConfig): Promise<Transport> {
+  if (config.type === "openapi") {
+    const [clientSide, serverSide] = InMemoryTransport.createLinkedPair();
+    const server = await createOpenApiServer(config);
+    await server.connect(serverSide);
+    return clientSide;
+  }
   if (config.type === "stdio") {
     return new StdioClientTransport({
       command: config.command,
@@ -44,12 +59,12 @@ export async function introspectSource(
   const now = opts.now ?? (() => new Date());
   const client = new Client({ name: "toolc-frontend", version: "0.0.1" });
   try {
-    await client.connect(createTransport(downstream.transport));
+    await client.connect(await createTransport(downstream.transport));
   } catch (err) {
     throw new DownstreamError(
       downstream.id,
       `failed to connect: ${describeError(err)}`,
-      downstream.transport.type === "http"
+      downstream.transport.type !== "stdio"
         ? "check the URL and auth headers; run with --skip-unavailable to compile without it"
         : "check the command exists; run with --skip-unavailable to compile without it",
     );
