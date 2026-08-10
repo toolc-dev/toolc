@@ -6,9 +6,10 @@ import type { Task } from "./task.js";
  * answer only — never the transcript (judge the answer, not the effort).
  */
 
-export const JUDGE_PROMPT_VERSION = "judge-v1";
+export const JUDGE_PROMPT_VERSION = "judge-v2";
 
 const JUDGE_SYSTEM = `You are a strict benchmark grader. You receive a task, a grading rubric, and an agent's final answer. Grade the ANSWER against the rubric only — ignore effort, verbosity, or style. Reject answers that are hedged to the point of not committing, and answers based on general knowledge where the rubric demands tool-derived evidence.
+Today's date is ${new Date().toISOString().slice(0, 10)}. The agent had live tool access, so data dated near today — including dates after your training cutoff — is expected and must NOT be treated as fabricated on recency alone.
 Respond in exactly this format:
 VERDICT: pass|fail
 REASON: <one sentence>`;
