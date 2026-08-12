@@ -1,5 +1,7 @@
 export * from "./emit/emit.js";
 export * from "./frontend/mcp.js";
+export * from "./frontend/openapi.js";
+export * from "./frontend/synthesize.js";
 export * from "./ir/serialize.js";
 export * from "./ir/types.js";
 export * from "./macros/load.js";
