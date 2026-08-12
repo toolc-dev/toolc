@@ -35,7 +35,13 @@ export async function loadOpenApiSpec(
       headers: { Accept: "application/json, application/yaml;q=0.5", ...config.headers },
     });
     if (!response.ok) throw new Error(`spec fetch failed: HTTP ${response.status}`);
-    return JSON.parse(await response.text()) as Record<string, unknown>;
+    const text = await response.text();
+    if (/^\s*</.test(text)) {
+      throw new Error(
+        "URL returned an HTML page, not an OpenAPI spec. If this is a docs page, use the 'draft one from its docs' option instead.",
+      );
+    }
+    return JSON.parse(text) as Record<string, unknown>;
   }
   return JSON.parse(readFileSync(config.spec, "utf8")) as Record<string, unknown>;
 }
