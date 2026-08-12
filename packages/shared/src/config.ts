@@ -20,8 +20,10 @@ export const HttpTransportSchema = z.object({
 
 export const OpenApiTransportSchema = z.object({
   type: z.literal("openapi"),
-  /** OpenAPI 3.x spec: URL (hosted) or file path (CLI). */
-  spec: z.string().min(1),
+  /** OpenAPI 3.x spec: URL (hosted) or file path (CLI). Empty when specInline is set. */
+  spec: z.string().default(""),
+  /** Inline spec object (synthesized from docs); takes precedence over spec. */
+  specInline: z.record(z.string(), z.unknown()).optional(),
   /** Override for spec.servers[0].url. */
   baseUrl: z.url().optional(),
   headers: z.record(z.string(), z.string()).optional(),

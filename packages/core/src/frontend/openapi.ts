@@ -28,6 +28,8 @@ function sanitizeName(raw: string): string {
 export async function loadOpenApiSpec(
   config: OpenApiTransportConfig,
 ): Promise<Record<string, unknown>> {
+  if (config.specInline) return config.specInline as Record<string, unknown>;
+  if (!config.spec) throw new Error("openapi: no spec URL/path and no inline spec");
   if (/^https?:\/\//.test(config.spec)) {
     const response = await fetch(config.spec, {
       headers: { Accept: "application/json, application/yaml;q=0.5", ...config.headers },
