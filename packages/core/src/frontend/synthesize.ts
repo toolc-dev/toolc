@@ -15,28 +15,68 @@ Rules:
 - Include parameter constraints the docs state: enum values, minimum/maximum, defaults, required flags.
 - GET endpoints matter most; include write endpoints only when clearly documented.
 - Auth: if the docs describe an API key or bearer header, note it in info.description but do NOT add security schemes to operations.
+Output the JSON MINIFIED (no indentation, no newlines inside the JSON) to fit the response budget.
 Respond with exactly one block and no other prose:
 <<<SPEC>>>
-{ ...the complete OpenAPI 3.0 JSON... }
+{...the complete OpenAPI 3.0 JSON, minified...}
 <<<END>>>`;
 
-const MAX_DOCS_CHARS = 150_000;
+const MAX_DOCS_CHARS = 120_000;
+const MAX_CRAWL_PAGES = 12;
 
-/** Fetch a docs page and reduce it to readable text (crude HTML strip). */
-export async function fetchDocsText(url: string): Promise<string> {
-  const response = await fetch(url, {
-    headers: { Accept: "text/html, text/markdown, text/plain", "User-Agent": "toolc/0.0.1" },
-  });
-  if (!response.ok) throw new Error(`docs fetch failed: HTTP ${response.status}`);
-  let text = await response.text();
-  text = text
+function stripHtml(html: string): string {
+  return html
     .replace(/<script[\s\S]*?<\/script>/gi, " ")
     .replace(/<style[\s\S]*?<\/style>/gi, " ")
     .replace(/<[^>]+>/g, " ")
     .replace(/&[a-z]+;/gi, " ")
     .replace(/[ \t]+/g, " ")
     .replace(/\n{3,}/g, "\n\n");
-  return text.slice(0, MAX_DOCS_CHARS);
+}
+
+async function fetchPage(url: string): Promise<string> {
+  const response = await fetch(url, {
+    headers: { Accept: "text/html, text/markdown, text/plain", "User-Agent": "toolc/0.0.1" },
+  });
+  if (!response.ok) throw new Error(`docs fetch failed: HTTP ${response.status}`);
+  return response.text();
+}
+
+/** Same-host doc links from a page, scoped under the root page's parent path. */
+export function extractDocLinks(html: string, rootUrl: string): string[] {
+  const root = new URL(rootUrl);
+  const scope = root.pathname.replace(/\/[^/]*$/, "/");
+  const links = new Set<string>();
+  for (const match of html.matchAll(/href=["']([^"'#?]+)["']/gi)) {
+    try {
+      const target = new URL(match[1]!, rootUrl);
+      if (target.host !== root.host) continue;
+      if (!target.pathname.startsWith(scope)) continue;
+      if (/\.(css|js|png|jpg|svg|ico|woff2?)$/i.test(target.pathname)) continue;
+      const normalized = `${target.origin}${target.pathname}`;
+      if (normalized !== `${root.origin}${root.pathname}`) links.add(normalized);
+    } catch {
+      // unparsable href; skip
+    }
+  }
+  return [...links].slice(0, MAX_CRAWL_PAGES);
+}
+
+/**
+ * Fetch the docs page plus its same-site documentation links (bounded crawl),
+ * reduced to readable text. Single-page docs behave as before.
+ */
+export async function fetchDocsText(url: string): Promise<string> {
+  const rootHtml = await fetchPage(url);
+  const pages = [`## ${url}\n${stripHtml(rootHtml)}`];
+  const links = extractDocLinks(rootHtml, url);
+  const fetched = await Promise.allSettled(links.map((l) => fetchPage(l)));
+  fetched.forEach((result, i) => {
+    if (result.status === "fulfilled") {
+      pages.push(`## ${links[i]}\n${stripHtml(result.value)}`);
+    }
+  });
+  return pages.join("\n\n").slice(0, MAX_DOCS_CHARS);
 }
 
 export interface SynthesisResult {
@@ -61,13 +101,16 @@ export async function synthesizeSpecFromDocs(
     prompt: `Documentation from ${docsUrl}:\n\n${docsText}`,
     maxTokens: 16_000,
   });
-  const match = /<<<SPEC>>>\s*([\s\S]*?)<<<END>>>/.exec(raw);
+  const match = /<<<SPEC>>>\s*([\s\S]*?)(?:<<<END>>>|$)/.exec(raw);
   if (!match) throw new Error("model returned no spec block");
   let spec: Record<string, unknown>;
   try {
-    spec = JSON.parse(match[1]!.trim()) as Record<string, unknown>;
+    // Salvage a truncated response by trimming to the last complete brace.
+    let body = match[1]!.trim();
+    if (!body.endsWith("}")) body = body.slice(0, body.lastIndexOf("}") + 1);
+    spec = JSON.parse(body) as Record<string, unknown>;
   } catch {
-    throw new Error("drafted spec was not valid JSON");
+    throw new Error("drafted spec was not valid JSON (response may have been truncated)");
   }
   const servers = spec.servers as Array<{ url?: string }> | undefined;
   if (!servers?.[0]?.url?.startsWith("https://")) {
