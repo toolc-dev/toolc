@@ -113,7 +113,7 @@ export const ServeSchema = z.object({
     .object({
       enabled: z.boolean().default(false),
       /** Results above this size (estimated tokens) get compacted; no fixed output budget. */
-      triggerTokens: z.number().int().min(500).max(200_000).default(10_000),
+      triggerTokens: z.number().int().min(500).max(200_000).default(20_000),
       model: z.string().default("claude-haiku-4-5"),
       /** Custom system prompt; null serves the built-in default. */
       prompt: z.string().nullable().default(null),
