@@ -78,6 +78,10 @@ export function parseOpenApiTools(spec: Record<string, unknown>): OpApiTool[] {
           type: typeof schema.type === "string" ? schema.type : "string",
           ...(p.description ? { description: p.description } : {}),
           ...(schema.enum ? { enum: schema.enum } : {}),
+          ...(schema.minimum !== undefined ? { minimum: schema.minimum } : {}),
+          ...(schema.maximum !== undefined ? { maximum: schema.maximum } : {}),
+          ...(schema.default !== undefined ? { default: schema.default } : {}),
+          ...(schema.format !== undefined ? { format: schema.format } : {}),
         };
         if (p.in === "path" || p.required) required.push(pName);
       }

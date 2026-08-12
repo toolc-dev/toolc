@@ -238,10 +238,27 @@ function buildFacadeDescription(group: ProposedGroup, byName: Map<string, ToolNo
     .map(([action, memberName]) => {
       const member = byName.get(memberName);
       if (!member) return null;
-      const props = (member.inputSchema.properties as Record<string, { type?: string }>) ?? {};
+      const props =
+        (member.inputSchema.properties as Record<
+          string,
+          { type?: string; enum?: unknown[]; minimum?: number; maximum?: number; default?: unknown }
+        >) ?? {};
       const required = new Set((member.inputSchema.required as string[]) ?? []);
       const params = Object.entries(props)
-        .map(([name, s]) => `${name}${required.has(name) ? "" : "?"}: ${s.type ?? "any"}`)
+        .map(([name, s]) => {
+          let doc = `${name}${required.has(name) ? "" : "?"}: ${s.type ?? "any"}`;
+          if (s.enum?.length) {
+            const shown = s.enum.slice(0, 8).join("|");
+            doc += ` [${shown}${s.enum.length > 8 ? "|…" : ""}]`;
+          }
+          const bounds = [
+            s.minimum !== undefined ? `min ${s.minimum}` : null,
+            s.maximum !== undefined ? `max ${s.maximum}` : null,
+            s.default !== undefined ? `default ${s.default}` : null,
+          ].filter(Boolean);
+          if (bounds.length > 0) doc += ` (${bounds.join(", ")})`;
+          return doc;
+        })
         .join(", ");
       return `- ${action}(${params || ""})`;
     })
