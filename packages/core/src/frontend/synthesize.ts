@@ -16,7 +16,10 @@ Rules:
 - GET endpoints matter most; include write endpoints only when clearly documented.
 - Auth: if the docs describe an API key or bearer token, note it in info.description but do NOT add security schemes, and OMIT auth parameters (apiKey, api_key, token, etc.) from operation parameters entirely; the gateway injects credentials on every request.
 Output the JSON MINIFIED (no indentation, no newlines inside the JSON) to fit the response budget.
-Respond with exactly one block and no other prose:
+Respond with exactly these blocks and no other prose (omit the AUTH block if the docs describe no authentication):
+<<<AUTH>>>
+{"name":"<exact parameter or header name from the docs, e.g. apiKey or X-API-Key>","kind":"<query or header>"}
+<<<END>>>
 <<<SPEC>>>
 {...the complete OpenAPI 3.0 JSON, minified...}
 <<<END>>>`;
@@ -79,9 +82,16 @@ export async function fetchDocsText(url: string): Promise<string> {
   return pages.join("\n\n").slice(0, MAX_DOCS_CHARS);
 }
 
+export interface AuthHint {
+  name: string;
+  kind: "query" | "header";
+}
+
 export interface SynthesisResult {
   spec: Record<string, unknown>;
   notes: string[];
+  /** Auth parameter the docs describe, when identifiable. */
+  authHint: AuthHint | null;
 }
 
 /** Draft an OpenAPI spec from documentation text. Throws on unusable output. */
@@ -119,7 +129,20 @@ export async function synthesizeSpecFromDocs(
   const paths = Object.keys((spec.paths as Record<string, unknown>) ?? {});
   if (paths.length === 0) throw new Error("drafted spec has no paths");
   notes.push(`drafted ${paths.length} path(s) from ${docsUrl}`);
-  return { spec, notes };
+
+  let authHint: AuthHint | null = null;
+  const authMatch = /<<<AUTH>>>\s*([\s\S]*?)<<<END>>>/.exec(raw);
+  if (authMatch) {
+    try {
+      const parsed = JSON.parse(authMatch[1]!.trim()) as { name?: string; kind?: string };
+      if (parsed.name && (parsed.kind === "query" || parsed.kind === "header")) {
+        authHint = { name: parsed.name, kind: parsed.kind };
+      }
+    } catch {
+      // malformed hint; drafting still succeeds without it
+    }
+  }
+  return { spec, notes, authHint };
 }
 
 export interface ProbeResult {

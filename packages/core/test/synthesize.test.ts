@@ -36,11 +36,12 @@ describe("spec synthesis", () => {
       "https://docs.example.com/api",
       async ({ prompt }) => {
         expect(prompt).toContain("GET /notes returns all notes");
-        return `<<<SPEC>>>\n${JSON.stringify(spec)}\n<<<END>>>`;
+        return `<<<AUTH>>>\n{"name":"apiKey","kind":"query"}\n<<<END>>>\n<<<SPEC>>>\n${JSON.stringify(spec)}\n<<<END>>>`;
       },
       { docsText: "The Notes API. Base URL https://api.example.com. GET /notes returns all notes. ".repeat(5) },
     );
     expect(Object.keys(result.spec.paths as object)).toEqual(["/notes"]);
+    expect(result.authHint).toEqual({ name: "apiKey", kind: "query" });
   });
 
   it("rejects drafts without an https base or paths", async () => {
