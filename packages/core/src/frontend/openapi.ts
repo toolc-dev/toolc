@@ -168,6 +168,9 @@ export async function createOpenApiServer(config: OpenApiTransportConfig): Promi
       if (url.includes(`{${key}}`)) url = url.replaceAll(`{${key}}`, encodeURIComponent(encoded));
       else query.set(key, encoded);
     }
+    // Credentials are authoritative: re-apply after args so a model-supplied
+    // value (e.g. apiKey "demo" lifted from doc examples) can never clobber them.
+    for (const [name, value] of Object.entries(config.query ?? {})) query.set(name, value);
     const qs = query.toString();
     try {
       const response = await fetch(`${baseUrl}${url}${qs ? `?${qs}` : ""}`, {

@@ -14,7 +14,7 @@ Rules:
 - Give every operation an operationId (snake_case), a one-line summary, and parameter descriptions lifted from the docs.
 - Include parameter constraints the docs state: enum values, minimum/maximum, defaults, required flags.
 - GET endpoints matter most; include write endpoints only when clearly documented.
-- Auth: if the docs describe an API key or bearer header, note it in info.description but do NOT add security schemes to operations.
+- Auth: if the docs describe an API key or bearer token, note it in info.description but do NOT add security schemes, and OMIT auth parameters (apiKey, api_key, token, etc.) from operation parameters entirely; the gateway injects credentials on every request.
 Output the JSON MINIFIED (no indentation, no newlines inside the JSON) to fit the response budget.
 Respond with exactly one block and no other prose:
 <<<SPEC>>>
