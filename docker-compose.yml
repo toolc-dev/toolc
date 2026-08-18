@@ -1,0 +1,8 @@
+services:
+  toolc:
+    build: .
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+    volumes:
+      - ./toolc.config.jsonc:/config/toolc.config.jsonc:ro
+      - ./.toolc:/app/.toolc

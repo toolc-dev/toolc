@@ -1,7 +1,6 @@
 {
   "name": "@toolc/shared",
   "version": "0.0.1",
-  "private": true,
   "type": "module",
   "exports": {
     ".": "./src/index.ts"
@@ -16,5 +15,18 @@
   },
   "devDependencies": {
     "vitest": "^3.2.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/toolc-dev/toolc.git"
+  },
+  "license": "Apache-2.0",
+  "homepage": "https://toolc.dev",
+  "description": "toolc shared config schema and errors.",
+  "files": [
+    "src"
+  ],
+  "publishConfig": {
+    "access": "public"
   }
 }
