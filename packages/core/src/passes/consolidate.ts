@@ -1,4 +1,4 @@
-import { effectiveDescription, isVisible, type ToolNode, toolId } from "../ir/types.js";
+import { effectiveDescription, isVisible, TOOLC_SOURCE, type ToolNode, toolId } from "../ir/types.js";
 import type { Pass, PassDiff } from "./types.js";
 
 /**
@@ -31,6 +31,25 @@ action_name = original_tool_name
 group description (may span multiple lines)
 <<<END>>>`;
 
+const CROSS_PROMPT = `You design tool surfaces for LLM agents. You will receive the FULL catalog of a multi-server tool pool, with every tool id prefixed by its source server. Identify capabilities that OVERLAP ACROSS SERVERS (e.g. two servers both offering news, search, or weather) and merge each overlap into one facade tool.
+
+Rules:
+- Only group tools from at least TWO different sources that serve the same user-facing capability. Same-source families are handled elsewhere; never propose a single-source group.
+- Never merge tools with clashing semantics or side effects. Read-only lookups and mutating operations never share a facade.
+- 2 to MAX_GROUP members per group. A tool appears in at most one group. Most tools should remain ungrouped.
+- Group name: a short capability noun (news, web_search). Action names: snake_case, unique in the group, and MUST make the source obvious (e.g. aiera_web_search, massive_articles).
+- Group description: first line states the capability, max 320 characters. Then one line per action stating its SOURCE and when to prefer it over the sibling actions. Never invent capabilities.
+- Members are FULL tool ids exactly as given (source:tool_name).
+
+Respond with one block per group, exactly in this format (no other prose):
+<<<GROUP group_name>>>
+<<<MEMBERS>>>
+action_name = source:tool_name
+action_name = source:tool_name
+<<<DESCRIPTION>>>
+group description (may span multiple lines)
+<<<END>>>`;
+
 interface ProposedGroup {
   name: string;
   /** action name → member tool name (unnamespaced, within the source). */
@@ -57,6 +76,75 @@ export const consolidatePass: Pass = async (graph, config, ctx) => {
   const existingIds = new Set(graph.tools.map((t) => t.id));
   let tools = [...graph.tools];
 
+  // Phase 1 (opt-in): cross-server capability facades over the whole pool.
+  if (config.compile.consolidate.crossServer) {
+    const candidates = tools.filter((t) => t.kind === "passthrough" && isVisible(t));
+    if (candidates.length >= minGroupSize) {
+      try {
+        const proposals = parseGroups(
+          await ctx.llm({
+            model,
+            system: CROSS_PROMPT.replace("MAX_GROUP", String(maxGroupSize)),
+            prompt: crossCatalogPrompt(candidates),
+            maxTokens: 8192,
+          }),
+        );
+        const claimed = new Set<string>();
+        for (const group of proposals) {
+          const problem = validateCrossGroup(group, {
+            candidates,
+            claimed,
+            existingIds,
+            minGroupSize,
+            maxGroupSize,
+          });
+          if (problem) {
+            ctx.warn(`consolidate: rejected cross-server group "${group.name}": ${problem}`);
+            continue;
+          }
+          const byId = new Map(candidates.map((t) => [t.id, t]));
+          const actions: Record<string, string> = {};
+          for (const [action, memberId] of group.members) {
+            actions[action] = memberId;
+            claimed.add(memberId);
+          }
+          const facadeId = toolId(TOOLC_SOURCE, group.name);
+          tools.push({
+            id: facadeId,
+            source: TOOLC_SOURCE,
+            name: group.name,
+            description: buildCrossFacadeDescription(group, byId),
+            inputSchema: facadeSchema(Object.keys(actions)),
+            overlays: {},
+            kind: "facade",
+            facade: { actions },
+          });
+          existingIds.add(facadeId);
+          diff.added.push(facadeId);
+          tools = tools.map((t): ToolNode => {
+            if (t.kind !== "passthrough" || !claimed.has(t.id) || t.overlays.hidden === true)
+              return t;
+            if (![...group.members.values()].includes(t.id)) return t;
+            diff.hidden.push(t.id);
+            return {
+              ...t,
+              overlays: {
+                ...t.overlays,
+                hidden: true,
+                hiddenReason: `consolidated into ${facadeId}`,
+              },
+            };
+          });
+        }
+      } catch (err) {
+        ctx.warn(
+          `consolidate: cross-server generation failed (${err instanceof Error ? err.message : err}); continuing per-source`,
+        );
+      }
+    }
+  }
+
+  // Phase 2: per-source families over whatever remains visible.
   for (const source of graph.sources) {
     const candidates = tools.filter(
       (t) => t.source === source.id && t.kind === "passthrough" && isVisible(t),
@@ -261,6 +349,60 @@ function buildFacadeDescription(group: ProposedGroup, byName: Map<string, ToolNo
         })
         .join(", ");
       return `- ${action}(${params || ""})`;
+    })
+    .filter(Boolean)
+    .join("\n");
+  return `${group.description}\n\nAction parameters ("?" = optional):\n${paramLines}`;
+}
+
+
+function crossCatalogPrompt(candidates: ToolNode[]): string {
+  const catalog = candidates
+    .map((t) => `### ${t.id}\n${(effectiveDescription(t) || "(no description)").split("\n")[0]}`)
+    .join("\n\n");
+  return `Multi-server pool (${candidates.length} tools):\n\n${catalog}\n\nPropose cross-server capability groups only where sources genuinely overlap. Most tools must remain ungrouped.`;
+}
+
+function validateCrossGroup(
+  group: ProposedGroup,
+  ctx: {
+    candidates: ToolNode[];
+    claimed: Set<string>;
+    existingIds: Set<string>;
+    minGroupSize: number;
+    maxGroupSize: number;
+  },
+): string | null {
+  if (!/^[a-z][a-z0-9_]*$/.test(group.name)) return `invalid group name "${group.name}"`;
+  if (ctx.existingIds.has(toolId(TOOLC_SOURCE, group.name)))
+    return "name collides with existing tool id";
+  if (group.members.size < ctx.minGroupSize || group.members.size > ctx.maxGroupSize)
+    return `${group.members.size} member(s), need ${ctx.minGroupSize}-${ctx.maxGroupSize}`;
+  const ids = new Set(ctx.candidates.map((t) => t.id));
+  const sources = new Set<string>();
+  for (const [action, memberId] of group.members) {
+    if (!ids.has(memberId)) return `member "${memberId}" is not a mergeable tool`;
+    if (ctx.claimed.has(memberId)) return `member "${memberId}" already belongs to another group`;
+    if (!/^[a-z][a-z0-9_]*$/.test(action)) return `invalid action name "${action}"`;
+    sources.add(memberId.split(":")[0]!);
+  }
+  if (sources.size < 2) return "cross-server groups need members from at least two sources";
+  if (group.description.length === 0) return "empty description";
+  return null;
+}
+
+function buildCrossFacadeDescription(group: ProposedGroup, byId: Map<string, ToolNode>): string {
+  const paramLines = [...group.members.entries()]
+    .map(([action, memberId]) => {
+      const member = byId.get(memberId);
+      if (!member) return null;
+      const props =
+        (member.inputSchema.properties as Record<string, { type?: string }> | undefined) ?? {};
+      const required = new Set((member.inputSchema.required as string[]) ?? []);
+      const params = Object.entries(props)
+        .map(([name, s]) => `${name}${required.has(name) ? "" : "?"}: ${s.type ?? "any"}`)
+        .join(", ");
+      return `- ${action} [source: ${member.source}](${params})`;
     })
     .filter(Boolean)
     .join("\n");

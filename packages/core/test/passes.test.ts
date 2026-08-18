@@ -335,3 +335,61 @@ describe("consolidatePass", () => {
     expect(searchable).not.toContain("finco:search_transcripts");
   });
 });
+
+describe("cross-server consolidation", () => {
+  const crossConfig = () =>
+    config({
+      compile: {
+        passes: ["consolidate"],
+        macrosDir: "/nonexistent",
+        consolidate: { crossServer: true },
+      },
+    });
+
+  it("merges overlapping capabilities across sources into a toolc facade", async () => {
+    const llm = async ({ system }: { system: string }) => {
+      if (system.includes("multi-server") || system.includes("OVERLAP ACROSS SERVERS")) {
+        return `<<<GROUP code_search>>>
+<<<MEMBERS>>>
+finco_transcripts = finco:search_transcripts
+repohub_code = repohub:search_repositories
+<<<DESCRIPTION>>>
+Search across content sources.
+<<<END>>>`;
+      }
+      return "<<<NONE>>>";
+    };
+    const { graph, diff } = await consolidatePass(fixtureFederationGraph(), crossConfig(), ctx({ llm }));
+    const facade = graph.tools.find((t) => t.id === "toolc:code_search")!;
+    expect(facade.kind).toBe("facade");
+    expect(facade.facade?.actions).toEqual({
+      finco_transcripts: "finco:search_transcripts",
+      repohub_code: "repohub:search_repositories",
+    });
+    expect(facade.description).toContain("[source: finco]");
+    expect(facade.description).toContain("[source: repohub]");
+    expect(diff.hidden).toContain("finco:search_transcripts");
+    expect(diff.hidden).toContain("repohub:search_repositories");
+  });
+
+  it("rejects single-source groups in the cross phase", async () => {
+    const warnings: string[] = [];
+    const llm = async ({ system }: { system: string }) =>
+      system.includes("OVERLAP ACROSS SERVERS")
+        ? `<<<GROUP events>>>
+<<<MEMBERS>>>
+a = finco:find_events
+b = finco:find_companies
+<<<DESCRIPTION>>>
+Same-source group, should be rejected here.
+<<<END>>>`
+        : "<<<NONE>>>";
+    const { graph } = await consolidatePass(
+      fixtureFederationGraph(),
+      crossConfig(),
+      ctx({ llm, warn: (m) => warnings.push(m) }),
+    );
+    expect(graph.tools.some((t) => t.id === "toolc:events")).toBe(false);
+    expect(warnings.some((w) => w.includes("at least two sources"))).toBe(true);
+  });
+});

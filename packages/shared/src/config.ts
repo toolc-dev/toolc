@@ -82,6 +82,8 @@ export const CompileSchema = z.object({
       minGroupSize: z.number().int().min(2).default(2),
       /** Groups larger than this are rejected (over-merging hurts). */
       maxGroupSize: z.number().int().min(2).default(12),
+      /** Also merge overlapping capabilities ACROSS servers into toolc: facades. */
+      crossServer: z.boolean().default(false),
     })
     .prefault({}),
   macroInline: z
@@ -131,6 +133,7 @@ export const BenchConditionSchema = z.enum([
   "compiled-no-selection",
   "compiled-consolidate",
   "consolidate-no-selection",
+  "compiled-cross",
 ]);
 
 export const BenchSchema = z.object({

@@ -55,10 +55,20 @@ export async function prepareConditionArtifacts(
   const llm = makeAnthropicLlm(warn);
 
   for (const condition of compiledConditions) {
-    const passes = conditionPasses(condition, config.compile.passes);
+    const passes = conditionPasses(
+      condition === "compiled-cross" ? "compiled-consolidate" : condition,
+      config.compile.passes,
+    );
     const conditionConfig: ToolcConfig = {
       ...config,
-      compile: { ...config.compile, passes },
+      compile: {
+        ...config.compile,
+        passes,
+        consolidate: {
+          ...config.compile.consolidate,
+          crossServer: condition === "compiled-cross" || config.compile.consolidate.crossServer,
+        },
+      },
     };
     const { graph: compiled } = await runPasses(graph, conditionConfig, {
       macros,
