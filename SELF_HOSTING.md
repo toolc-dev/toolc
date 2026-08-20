@@ -40,15 +40,15 @@ persist across runs.
 
 ## Configuration
 
-Everything lives in `toolc.config.jsonc` — see the example file for the full
+Everything lives in `toolc.config.jsonc`; see the example file for the full
 shape. Highlights:
 
-- `downstream[]` — MCP servers (`stdio` or `http` transports) or REST APIs
+- `downstream[]`: MCP servers (`stdio` or `http` transports) or REST APIs
   (`openapi` transport with a spec URL/path)
-- `compile.passes` — which optimizations run; each is independently
+- `compile.passes`: which optimizations run; each is independently
   toggleable (`dead-tool`, `rewrite`, `consolidate`, `macro-inline`, `selection`)
-- `serve.compaction` — serve-time summarization of oversized results
-- `compile.macrosDir` — hand-authored multi-step macros (TypeScript modules)
+- `serve.compaction`: serve-time summarization of oversized results
+- `compile.macrosDir`: hand-authored multi-step macros (TypeScript modules)
 
 Environment variables referenced as `${NAME}` in the config are substituted
 at load time, so secrets stay out of the file.

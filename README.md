@@ -1,7 +1,7 @@
 # toolc
 
 **The optimizing compiler for agent tool surfaces.** Point it at your MCP
-servers — or just a REST API's OpenAPI spec, or even a docs page — and get
+servers, or just a REST API's OpenAPI spec, or even a docs page, and get
 back one endpoint that serves a smaller, smarter tool surface: cheaper for
 every agent that connects, more accurate on every task, with every call
 logged.
@@ -10,16 +10,16 @@ Connecting N MCP servers dumps every tool definition into the model's
 context, degrades tool selection, and forces improvised multi-hop call
 chains. toolc compiles the federation instead:
 
-- **Rewrite** — LLM-optimized descriptions with sibling disambiguation
-- **Consolidate** — families of near-duplicate tools (`search_x`/`find_x`/`get_x`)
+- **Rewrite**: LLM-optimized descriptions with sibling disambiguation
+- **Consolidate**: families of near-duplicate tools (`search_x`/`find_x`/`get_x`)
   merge into single facade tools with deterministic routing
-- **Selection** — the whole catalog compresses behind two meta-tools
+- **Selection**: the whole catalog compresses behind two meta-tools
   (`search_tools`/`call_tool`) when you want maximum context savings
-- **Compaction** — oversized results are summarized at serve time, preserving
+- **Compaction**: oversized results are summarized at serve time, preserving
   identifiers and sourcing details
-- **Compose** — REST APIs join the pool straight from an OpenAPI spec, or from
+- **Compose**: REST APIs join the pool straight from an OpenAPI spec, or from
   a drafted spec synthesized from their documentation
-- **Observe** — every call logged with arguments and results; recurring errors
+- **Observe**: every call logged with arguments and results; recurring errors
   cluster into recommended compiler fixes
 
 ## Benchmark
@@ -80,15 +80,15 @@ usage-based billing (free tier included).
 
 ## Layout
 
-- `packages/core` — IR (Capability Graph), frontends (MCP, OpenAPI, docs synthesis), passes, emit
-- `packages/gateway` — runtime MCP server (mirror + compiled) with call logging and compaction
-- `packages/cli` — the `toolc` command
-- `packages/harness` — benchmark runner, grading, reports
-- `packages/shared` — config schema, errors
+- `packages/core`: IR (Capability Graph), frontends (MCP, OpenAPI, docs synthesis), passes, emit
+- `packages/gateway`: runtime MCP server (mirror + compiled) with call logging and compaction
+- `packages/cli`: the `toolc` command
+- `packages/harness`: benchmark runner, grading, reports
+- `packages/shared`: config schema, errors
 
 ## License
 
-The engine (everything in this repository) is Apache-2.0, forever — anyone
+The engine (everything in this repository) is Apache-2.0, forever: anyone
 can compile and serve their own tool surfaces locally with the exact same
 compilation quality as the hosted product. The toolc.dev console and hosted
 platform are proprietary.
