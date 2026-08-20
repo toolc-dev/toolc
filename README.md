@@ -37,7 +37,7 @@ gateway hop in every condition
 
 Consolidation dominates both ends of the frontier: the selection surface is
 the cost lever, consolidation lifts accuracy everywhere. Every pass is a
-config toggle — pick the tradeoff per deployment.
+config toggle; pick the tradeoff per deployment.
 
 ## Quick start
 
