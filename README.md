@@ -1,5 +1,3 @@
-<p align="left"><img src="docs/logo.svg" alt="toolc" height="56"></p>
-
 # toolc
 
 **The optimizing compiler for agent tool surfaces.** Point it at your MCP
