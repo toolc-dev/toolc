@@ -99,3 +99,23 @@ describe("structuralCompact", () => {
     expect(out.length).toBeLessThanOrEqual(1_000 * 4 + 100);
   });
 });
+
+describe("async compaction", () => {
+  it("serves a structural cut immediately, then the cached LLM version on repeat", async () => {
+    let resolveLlm: (v: string) => void = () => {};
+    const llm = () => new Promise<string>((resolve) => { resolveLlm = resolve; });
+    const result = { content: [{ type: "text" as const, text: big(400_000) }] };
+    const opts = { triggerTokens: 2_000, asyncAboveTokens: 50_000, model: "m", llm };
+
+    const first = await compactResult(result, { toolName: "t1", args: {} }, opts);
+    expect(first.strategy).toBe("structural");
+    expect((first.result.content![0] as { text: string }).text).toContain("being prepared");
+
+    resolveLlm("tight summary");
+    await new Promise((r) => setTimeout(r, 10));
+
+    const second = await compactResult(result, { toolName: "t1", args: {} }, opts);
+    expect(second.strategy).toBe("llm");
+    expect((second.result.content![0] as { text: string }).text).toBe("tight summary");
+  });
+});
