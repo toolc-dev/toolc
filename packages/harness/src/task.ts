@@ -8,6 +8,7 @@ import { z } from "zod";
 
 export const TaskCategorySchema = z.enum([
   "single-tool",
+  "overlap-selection",
   "ambiguous-selection",
   "cross-server-chain",
   "needle",
