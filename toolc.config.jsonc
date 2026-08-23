@@ -24,6 +24,17 @@
       }
     },
     {
+      // Overlap-rich bench additions (2026-08-23): weather overlaps nws,
+      // article search overlaps gh/hf search. Both keyless, composed via
+      // the openapi frontend (dogfooding REST composition in the bench).
+      "id": "meteo",
+      "transport": { "type": "openapi", "spec": "packages/openapi-autogen/specs/open-meteo.json" }
+    },
+    {
+      "id": "hn",
+      "transport": { "type": "openapi", "spec": "packages/openapi-autogen/specs/hn-algolia.json" }
+    },
+    {
       // The "bad" server (spec §8): naive OpenAPI auto-generation over the
       // National Weather Service API. Deliberately not hand-tuned.
       "id": "nws",

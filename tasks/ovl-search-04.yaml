@@ -1,0 +1,14 @@
+# Cross-check task: same topic, two sources, distinct result types.
+id: ovl-search-04
+category: overlap-selection
+prompt: >
+  For the topic "Rust programming language": give me (a) one popular GitHub
+  repository (owner/repo) and (b) one high-scoring Hacker News story title
+  about Rust. Name which tool produced each.
+grading:
+  type: judge
+  rubric: >
+    PASS only if both a plausible GitHub repo in owner/repo form and a real
+    HN story title are given, each attributed to the correct source type.
+expected_tools: ["github:search_entity", "hn:search_stories"]
+timeout_turns: 12

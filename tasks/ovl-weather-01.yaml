@@ -1,0 +1,16 @@
+# Both nws:point-based forecast and meteo can answer; either is fine.
+id: ovl-weather-01
+category: overlap-selection
+prompt: >
+  What is tonight's forecast low temperature for the point at latitude
+  39.7392, longitude -104.9847 (Denver)? Use whichever weather source you
+  judge best and name which source you used.
+grading:
+  type: judge
+  rubric: >
+    PASS only if (1) a specific low temperature is given for tonight sourced
+    from a tool call, plausible for Denver in the current season (-30 to 85 F
+    or -35 to 30 C, units stated), and (2) the answer names which weather
+    source/tool it used.
+expected_tools: ["meteo:get_weather_forecast", "nws:gridpoint_api"]
+timeout_turns: 10

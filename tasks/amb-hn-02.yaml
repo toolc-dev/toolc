@@ -1,0 +1,14 @@
+# Trap: item vs user endpoints.
+id: amb-hn-02
+category: ambiguous-selection
+prompt: >
+  Does the Hacker News user "dhouston" still exist, and what does the user
+  API report their karma to be? A rounded number is fine.
+grading:
+  type: judge
+  rubric: >
+    PASS only if the answer confirms the user exists and reports a karma
+    number greater than 1000, sourced from a tool call (not general
+    knowledge). Any specific number over 1000 passes.
+expected_tools: ["hn:get_user"]
+timeout_turns: 8

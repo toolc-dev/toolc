@@ -1,0 +1,34 @@
+{
+  "openapi": "3.0.0",
+  "info": { "title": "Open-Meteo Weather API", "version": "1.0" },
+  "servers": [{ "url": "https://api.open-meteo.com" }],
+  "paths": {
+    "/v1/forecast": {
+      "get": {
+        "operationId": "get_weather_forecast",
+        "summary": "Weather forecast for coordinates.",
+        "description": "Returns current conditions and forecasts for a latitude/longitude point. Response includes the location's timezone and elevation.",
+        "parameters": [
+          { "name": "latitude", "in": "query", "required": true, "schema": { "type": "number" }, "description": "Latitude in decimal degrees" },
+          { "name": "longitude", "in": "query", "required": true, "schema": { "type": "number" }, "description": "Longitude in decimal degrees" },
+          { "name": "current", "in": "query", "schema": { "type": "string" }, "description": "Comma list of current-condition variables, e.g. temperature_2m,wind_speed_10m" },
+          { "name": "daily", "in": "query", "schema": { "type": "string" }, "description": "Comma list of daily variables, e.g. temperature_2m_max,precipitation_sum" },
+          { "name": "hourly", "in": "query", "schema": { "type": "string" }, "description": "Comma list of hourly variables" },
+          { "name": "timezone", "in": "query", "schema": { "type": "string" }, "description": "Timezone name or 'auto' to resolve from coordinates" },
+          { "name": "forecast_days", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 16, "default": 7 } },
+          { "name": "temperature_unit", "in": "query", "schema": { "type": "string", "enum": ["celsius", "fahrenheit"] } }
+        ]
+      }
+    },
+    "/v1/elevation": {
+      "get": {
+        "operationId": "get_elevation",
+        "summary": "Ground elevation in meters for coordinates.",
+        "parameters": [
+          { "name": "latitude", "in": "query", "required": true, "schema": { "type": "number" } },
+          { "name": "longitude", "in": "query", "required": true, "schema": { "type": "number" } }
+        ]
+      }
+    }
+  }
+}

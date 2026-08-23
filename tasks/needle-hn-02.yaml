@@ -1,0 +1,13 @@
+# Needle: show_hn tag.
+id: needle-hn-02
+category: needle
+prompt: >
+  Find one "Show HN" story about "MCP" using the appropriate tag filter on
+  Hacker News search. Report its exact title.
+grading:
+  type: judge
+  rubric: >
+    PASS only if a real story title beginning with or tagged as Show HN,
+    related to MCP, is reported from a tool search using the show_hn tag.
+expected_tools: ["hn:search_stories"]
+timeout_turns: 10

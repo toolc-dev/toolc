@@ -1,0 +1,11 @@
+# Verified live 2026-08-23. Immutable HN item.
+id: single-hn-01
+category: single-tool
+prompt: >
+  Who is the author of Hacker News item 8863, and what product was it
+  announcing?
+grading:
+  type: contains
+  expected: ["dhouston", "Dropbox"]
+expected_tools: ["hn:get_item"]
+timeout_turns: 8

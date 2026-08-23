@@ -1,0 +1,11 @@
+# Needle in existing pool, kept for balance.
+id: needle-gh-01
+category: needle
+prompt: >
+  In the modelcontextprotocol/typescript-sdk repository on GitHub, what is
+  the default branch name?
+grading:
+  type: contains
+  expected: "main"
+expected_tools: ["github:search_entity"]
+timeout_turns: 10

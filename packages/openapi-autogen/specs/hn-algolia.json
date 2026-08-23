@@ -1,0 +1,50 @@
+{
+  "openapi": "3.0.0",
+  "info": { "title": "Hacker News Search API", "version": "1.0" },
+  "servers": [{ "url": "https://hn.algolia.com/api/v1" }],
+  "paths": {
+    "/search": {
+      "get": {
+        "operationId": "search_stories",
+        "summary": "Search Hacker News stories and comments by relevance.",
+        "description": "Full-text search over Hacker News. Returns hits with title, author, points, num_comments, objectID, and created_at.",
+        "parameters": [
+          { "name": "query", "in": "query", "schema": { "type": "string" }, "description": "Full-text query" },
+          { "name": "tags", "in": "query", "schema": { "type": "string" }, "description": "Filter: story, comment, poll, show_hn, ask_hn, author_USERNAME, story_ID" },
+          { "name": "numericFilters", "in": "query", "schema": { "type": "string" }, "description": "e.g. points>100,num_comments>10" },
+          { "name": "hitsPerPage", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 50, "default": 20 } }
+        ]
+      }
+    },
+    "/search_by_date": {
+      "get": {
+        "operationId": "search_stories_by_date",
+        "summary": "Search Hacker News, newest first.",
+        "parameters": [
+          { "name": "query", "in": "query", "schema": { "type": "string" } },
+          { "name": "tags", "in": "query", "schema": { "type": "string" } },
+          { "name": "numericFilters", "in": "query", "schema": { "type": "string" } },
+          { "name": "hitsPerPage", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 50 } }
+        ]
+      }
+    },
+    "/items/{id}": {
+      "get": {
+        "operationId": "get_item",
+        "summary": "Fetch one Hacker News item (story or comment) by id.",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" }, "description": "Item id, e.g. 8863" }
+        ]
+      }
+    },
+    "/users/{username}": {
+      "get": {
+        "operationId": "get_user",
+        "summary": "Fetch a Hacker News user profile (karma, about, created).",
+        "parameters": [
+          { "name": "username", "in": "path", "required": true, "schema": { "type": "string" } }
+        ]
+      }
+    }
+  }
+}

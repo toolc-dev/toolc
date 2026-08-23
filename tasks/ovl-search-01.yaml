@@ -1,0 +1,15 @@
+# Article search overlap: HN vs GitHub repo search; HN is correct for discussions.
+id: ovl-search-01
+category: overlap-selection
+prompt: >
+  Find a widely-discussed Hacker News story about the Model Context Protocol
+  and report its title and point count. Community discussion matters here,
+  not code repositories.
+grading:
+  type: judge
+  rubric: >
+    PASS only if a real HN story title mentioning MCP/Model Context Protocol
+    is given with a tool-derived point count. FAIL if the answer returns
+    GitHub repositories instead of a discussion story.
+expected_tools: ["hn:search_stories"]
+timeout_turns: 10

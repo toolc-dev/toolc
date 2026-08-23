@@ -1,0 +1,13 @@
+# Needle: numeric filter usage.
+id: needle-hn-01
+category: needle
+prompt: >
+  Using Hacker News search with a numeric filter, find a story matching
+  "SQLite" with more than 500 points. Report its title and point count.
+grading:
+  type: judge
+  rubric: >
+    PASS only if a real SQLite-related HN story with a tool-reported point
+    count greater than 500 is given.
+expected_tools: ["hn:search_stories"]
+timeout_turns: 10

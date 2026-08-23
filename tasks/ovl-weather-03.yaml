@@ -1,0 +1,14 @@
+# Non-US point: NWS CANNOT answer (US-only); meteo is the only valid source.
+id: ovl-weather-03
+category: overlap-selection
+prompt: >
+  What is the current temperature in Paris, France (latitude 48.8566,
+  longitude 2.3522)? Use a weather tool.
+grading:
+  type: judge
+  rubric: >
+    PASS only if a specific current temperature for Paris is reported from a
+    tool result (units stated). The US National Weather Service cannot cover
+    Paris, so answers must not claim NWS as the source.
+expected_tools: ["meteo:get_weather_forecast"]
+timeout_turns: 10

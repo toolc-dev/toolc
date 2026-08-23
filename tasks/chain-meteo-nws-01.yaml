@@ -1,0 +1,12 @@
+# Cross-source chain: meteo timezone -> nws zone for same point.
+id: chain-meteo-nws-01
+category: cross-server-chain
+prompt: >
+  For the point at latitude 39.05, longitude -95.68: report (a) its IANA
+  timezone from a global weather source and (b) its NWS forecast zone id
+  (format XXZNNN) from the US National Weather Service.
+grading:
+  type: contains
+  expected: ["America/Chicago", "KSZ039"]
+expected_tools: ["meteo:get_weather_forecast", "nws:point"]
+timeout_turns: 12

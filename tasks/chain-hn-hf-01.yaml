@@ -1,0 +1,14 @@
+# News -> model hub chain.
+id: chain-hn-hf-01
+category: cross-server-chain
+prompt: >
+  Search Hacker News for a story about "Stable Diffusion", then find one
+  Stable Diffusion model on Hugging Face. Report the HN story title and the
+  HF model id.
+grading:
+  type: judge
+  rubric: >
+    PASS only if a real HN story title about Stable Diffusion AND a real
+    Hugging Face model id (owner/name) are both reported from tool results.
+expected_tools: ["hn:search_stories", "hf:hub_repo_search"]
+timeout_turns: 12

@@ -1,0 +1,13 @@
+# Trap: forecast tool also returns elevation; elevation tool is the direct path.
+id: amb-meteo-01
+category: ambiguous-selection
+prompt: >
+  Report the ground elevation in meters at latitude 46.8523, longitude
+  -121.7603 using the most direct tool available.
+grading:
+  type: judge
+  rubric: >
+    PASS only if the answer gives an elevation between 4200 and 4500 meters
+    attributed to a tool result. (The point is on Mount Rainier.)
+expected_tools: ["meteo:get_elevation"]
+timeout_turns: 8

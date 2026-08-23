@@ -1,0 +1,11 @@
+# Repo search is right here, not HN.
+id: ovl-search-02
+category: overlap-selection
+prompt: >
+  Find the GitHub repository for the Model Context Protocol TypeScript SDK
+  and report its full name (owner/repo). Code, not discussion.
+grading:
+  type: contains
+  expected: "modelcontextprotocol/typescript-sdk"
+expected_tools: ["github:search_entity"]
+timeout_turns: 10

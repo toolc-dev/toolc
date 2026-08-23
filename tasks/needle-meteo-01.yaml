@@ -1,0 +1,11 @@
+# Needle: 16-day forecast bound.
+id: needle-meteo-01
+category: needle
+prompt: >
+  What is the maximum number of forecast days the global weather forecast
+  tool supports in one request? Answer with the number.
+grading:
+  type: contains
+  expected: "16"
+expected_tools: ["meteo:get_weather_forecast"]
+timeout_turns: 6

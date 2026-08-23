@@ -1,0 +1,11 @@
+# Verified live 2026-08-23. HN item 1 is immutable.
+id: single-hn-02
+category: single-tool
+prompt: >
+  What is the title of the very first Hacker News item (item id 1), and who
+  posted it?
+grading:
+  type: contains
+  expected: ["Y Combinator", "pg"]
+expected_tools: ["hn:get_item"]
+timeout_turns: 8

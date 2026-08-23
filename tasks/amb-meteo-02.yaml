@@ -1,0 +1,15 @@
+# Trap: units parameter exists; agent must use fahrenheit explicitly.
+id: amb-meteo-02
+category: ambiguous-selection
+prompt: >
+  What is the current temperature in Fahrenheit at latitude 25.7617,
+  longitude -80.1918? Use a tool that lets you request Fahrenheit directly
+  rather than converting yourself.
+grading:
+  type: judge
+  rubric: >
+    PASS only if a specific Fahrenheit temperature between 40 and 105 is
+    reported for the location from a tool result, without manual C-to-F
+    conversion arithmetic shown as the method.
+expected_tools: ["meteo:get_weather_forecast"]
+timeout_turns: 8

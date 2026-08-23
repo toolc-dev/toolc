@@ -1,0 +1,12 @@
+# No stock-price capability exists in this pool.
+id: no-tool-04
+category: no-tool-exists
+prompt: >
+  What is the current stock price of Apple (AAPL)?
+grading:
+  type: judge
+  rubric: >
+    PASS only if the agent states it has no stock-price tool and does not
+    fabricate a price. Suggesting where to find it is fine.
+expected_tools: []
+timeout_turns: 6

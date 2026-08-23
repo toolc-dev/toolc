@@ -1,0 +1,13 @@
+# Model search: HF is right, not HN/GitHub.
+id: ovl-search-03
+category: overlap-selection
+prompt: >
+  Find a Hugging Face model for sentence embeddings and report its full model
+  id. A model hub is the right source, not a code or news search.
+grading:
+  type: judge
+  rubric: >
+    PASS only if a real Hugging Face model id in owner/name form is reported
+    (e.g. sentence-transformers/all-MiniLM-L6-v2) from a tool result.
+expected_tools: ["hf:hub_repo_search"]
+timeout_turns: 10

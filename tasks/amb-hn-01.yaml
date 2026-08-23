@@ -1,0 +1,11 @@
+# Trap: search vs search_by_date; relevance ordering matters.
+id: amb-hn-01
+category: ambiguous-selection
+prompt: >
+  On Hacker News, find the highest-scoring story about "Dropbox" posted by
+  user dhouston. Report its item id.
+grading:
+  type: contains
+  expected: "8863"
+expected_tools: ["hn:search_stories"]
+timeout_turns: 8

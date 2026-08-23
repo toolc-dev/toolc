@@ -1,0 +1,11 @@
+# Stable: story_8863 comment count is historical; use author filter instead.
+id: single-hn-03
+category: single-tool
+prompt: >
+  Using Hacker News search with an author filter, find the exact title of the
+  submission by user "dhouston" whose id is 8863.
+grading:
+  type: contains
+  expected: "Throw away your USB drive"
+expected_tools: ["hn:search_stories", "hn:get_item"]
+timeout_turns: 8

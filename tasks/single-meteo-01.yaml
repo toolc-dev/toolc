@@ -1,0 +1,11 @@
+# Verified live 2026-08-23: open-meteo elevation 1609m.
+id: single-meteo-01
+category: single-tool
+prompt: >
+  Using an elevation lookup tool, what is the ground elevation in meters at
+  latitude 39.7392, longitude -104.9847? Give the number the tool returns.
+grading:
+  type: contains
+  expected: "1609"
+expected_tools: ["meteo:get_elevation"]
+timeout_turns: 8

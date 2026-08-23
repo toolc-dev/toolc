@@ -1,0 +1,15 @@
+# Forces comparing the two sources.
+id: ovl-weather-04
+category: overlap-selection
+prompt: >
+  You have more than one weather source. For latitude 39.05, longitude
+  -95.68, get tomorrow's forecast high from TWO different weather sources and
+  report both numbers side by side, naming each source.
+grading:
+  type: judge
+  rubric: >
+    PASS only if two forecast highs are reported, each attributed to a
+    distinct weather source (e.g. Open-Meteo and the US National Weather
+    Service), both plausible (units stated) and tool-derived.
+expected_tools: ["meteo:get_weather_forecast", "nws:gridpoint_api"]
+timeout_turns: 12

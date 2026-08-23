@@ -1,0 +1,13 @@
+# Elevation phrasing that both nws:point metadata and meteo elevation could answer.
+id: ovl-weather-05
+category: overlap-selection
+prompt: >
+  How high above sea level, in meters, is the point at latitude 44.4280,
+  longitude -110.5885 (Yellowstone)? Use the most direct tool.
+grading:
+  type: judge
+  rubric: >
+    PASS only if an elevation between 2300 and 2500 meters is reported from a
+    tool result.
+expected_tools: ["meteo:get_elevation"]
+timeout_turns: 8

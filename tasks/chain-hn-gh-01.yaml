@@ -1,0 +1,13 @@
+# HN story -> GitHub repo it discusses.
+id: chain-hn-gh-01
+category: cross-server-chain
+prompt: >
+  Hacker News item 8863 announced a product. That product's company later
+  open-sourced a Python library called "zxcvbn" on GitHub under the account
+  named after the company. Confirm the repository exists and report its full
+  owner/repo name.
+grading:
+  type: contains
+  expected: "dropbox/zxcvbn"
+expected_tools: ["hn:get_item", "github:search_entity"]
+timeout_turns: 12

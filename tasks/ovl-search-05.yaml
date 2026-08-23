@@ -1,0 +1,14 @@
+# Author-scoped: only HN's author filter answers cleanly.
+id: ovl-search-05
+category: overlap-selection
+prompt: >
+  List two story titles submitted to Hacker News by the user "pg". Use a
+  search tool with an author filter, not memory.
+grading:
+  type: judge
+  rubric: >
+    PASS only if two plausible HN story titles are given, attributed to a
+    tool search filtered to author pg. FAIL if the titles are generic
+    fabrications with no tool evidence.
+expected_tools: ["hn:search_stories"]
+timeout_turns: 10

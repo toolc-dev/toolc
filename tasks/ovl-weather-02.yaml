@@ -1,0 +1,15 @@
+# US point: NWS has richer zone data; meteo works too.
+id: ovl-weather-02
+category: overlap-selection
+prompt: >
+  Will it rain in the next 24 hours at latitude 47.6062, longitude -122.3321
+  (Seattle)? Answer yes or no with a probability or precipitation amount from
+  a weather tool, and say which source you used.
+grading:
+  type: judge
+  rubric: >
+    PASS only if a yes/no with a tool-derived probability or precipitation
+    quantity is given and the source is named. FAIL if answered from general
+    knowledge about Seattle weather.
+expected_tools: ["meteo:get_weather_forecast", "nws:gridpoint_api"]
+timeout_turns: 10

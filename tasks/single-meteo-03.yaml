@@ -1,0 +1,11 @@
+# Verified live 2026-08-23: Everest summit elevation ~8724m per open-meteo DEM.
+id: single-meteo-03
+category: single-tool
+prompt: >
+  What elevation in meters does the elevation tool report for latitude
+  27.9881, longitude 86.9250?
+grading:
+  type: contains
+  expected: "8724"
+expected_tools: ["meteo:get_elevation"]
+timeout_turns: 8

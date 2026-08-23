@@ -10,10 +10,12 @@ const CLI_BIN = join(dirname(fileURLToPath(import.meta.url)), "../bin/toolc.mjs"
 export async function benchCommand(
   config: ToolcConfig,
   configPath: string,
-  opts: { tasks?: string; conditions?: string; trials?: string },
+  opts: { tasks?: string; conditions?: string; trials?: string; model?: string; outDir?: string },
 ): Promise<void> {
   if (opts.tasks) config.bench.tasksDir = opts.tasks;
   if (opts.trials) config.bench.trials = Number.parseInt(opts.trials, 10);
+  if (opts.model) config.bench.model = opts.model;
+  if (opts.outDir) config.bench.outDir = opts.outDir;
   if (opts.conditions) {
     config.bench.conditions = opts.conditions
       .split(",")

@@ -1,0 +1,11 @@
+# Verified live 2026-08-23: timezone resolution is stable.
+id: single-meteo-02
+category: single-tool
+prompt: >
+  Using a weather tool with timezone resolution, what IANA timezone applies at
+  latitude 39.7392, longitude -104.9847?
+grading:
+  type: contains
+  expected: "America/Denver"
+expected_tools: ["meteo:get_weather_forecast"]
+timeout_turns: 8

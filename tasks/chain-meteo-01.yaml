@@ -1,0 +1,13 @@
+# Two-step within meteo: elevation then forecast, same coords.
+id: chain-meteo-01
+category: cross-server-chain
+prompt: >
+  For latitude 39.7392, longitude -104.9847: first get the ground elevation
+  in meters, then get the current temperature. Report both values.
+grading:
+  type: judge
+  rubric: >
+    PASS only if elevation ~1609 m (1550-1670 accepted) AND a plausible
+    tool-derived current temperature (units stated) are both reported.
+expected_tools: ["meteo:get_elevation", "meteo:get_weather_forecast"]
+timeout_turns: 10

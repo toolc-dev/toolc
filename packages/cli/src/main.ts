@@ -76,7 +76,16 @@ program
   .option("--tasks <dir>", "task suite directory (overrides config)")
   .option("--conditions <list>", "comma-separated: raw,compiled (overrides config)")
   .option("--trials <n>", "trials per (task, condition) (overrides config)")
-  .action(async (opts: { tasks?: string; conditions?: string; trials?: string }) => {
+  .option("--model <id>", "agent model (overrides config)")
+  .option("--out-dir <dir>", "report output directory (overrides config)")
+  .action(
+    async (opts: {
+      tasks?: string;
+      conditions?: string;
+      trials?: string;
+      model?: string;
+      outDir?: string;
+    }) => {
     const { benchCommand } = await import("./bench.js");
     await benchCommand(loadConfig(program.opts().config), program.opts().config, opts);
   });
