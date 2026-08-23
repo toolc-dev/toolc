@@ -10,9 +10,7 @@
 
 \title{toolc: An Optimizing Compiler for Agent Tool Surfaces}
 \author{Bryan Healey\\ \texttt{bryan@toolc.dev}}
-\date{Draft, August 2026\thanks{Preliminary draft. Evaluation numbers are from a
-30-task, 3-trial pilot benchmark and will be superseded by a larger,
-multi-model study before submission.}}
+\date{Draft, August 2026}
 
 \begin{document}
 \maketitle
@@ -33,11 +31,13 @@ disambiguation, consolidation of near-duplicate tool families into
 deterministic facade tools, macro inlining, and an optional retrieval-based
 selection surface. The compiled artifact is served as a single drop-in MCP
 endpoint with full call logging, serve-time result compaction, and
-error-driven re-optimization. In a pilot evaluation over 131 tools from five
-live servers (30 tasks $\times$ 3 trials, judged answers), the compiled
-surface with consolidation matched the raw federation's task success (96.7\%)
-at $6.4\times$ lower cost per completed task, while a consolidation-only
-configuration reached 100\% success at half the raw cost. Every optimization
+error-driven re-optimization. In an evaluation over 137 tools from six live servers (60 tasks
+$\times$ 3 trials $\times$ two agent models; 1{,}800 judged trials), the
+compiled surface with consolidation matched the raw federation's success for
+a frontier agent (96.1\% vs.\ 96.7\%, overlapping intervals) at $5\times$
+lower cost per completed task, and \emph{improved} cross-source arbitration
+(90\% $\rightarrow$ 100\% on overlap tasks); for a small agent the same
+compression cost nine points, showing the benefit is capability-gated. Every optimization
 is a measured, reversible configuration choice rather than a fixed
 architecture.
 \end{abstract}
@@ -210,44 +210,59 @@ numeric constraint; a chronically failing tool).
 
 \section{Evaluation}\label{sec:eval}
 
-\textbf{Setup (pilot).} 131 tools across five live servers: a filesystem
-reference server, the public Hugging Face and GitHub MCP servers, and a
-deliberately naive machine-generated National Weather Service server (one
-tool per GET operation, verbatim descriptions). 30 tasks spanning five
-categories (single-tool, ambiguous-selection, cross-server chains,
-needle-in-haystack, no-tool-exists), 3 trials each, agent
-\texttt{claude-sonnet-4-6}, answers judged by a stronger model against
-task-specific rubrics. All conditions traverse the same gateway hop.
+\textbf{Setup.} 137 tools across six live servers: a filesystem reference
+server, the public Hugging Face and GitHub MCP servers, a deliberately naive
+machine-generated National Weather Service server (one tool per GET
+operation, verbatim descriptions), and two REST APIs (Open-Meteo,
+Hacker News search) composed through our OpenAPI frontend --- chosen to
+create genuine cross-server overlap in weather and article search. 60 tasks
+across six categories (single-tool, ambiguous-selection, cross-server
+chains, needle-in-haystack, no-tool-exists, and \emph{overlap-selection}:
+tasks answerable by multiple sources, including sources that \emph{cannot}
+answer, e.g.\ the US-only NWS for Paris weather), 3 trials each, two agent
+models (\texttt{claude-sonnet-4-6}, \texttt{claude-haiku-4-5}; 1{,}800
+trials total), answers judged by a stronger model against task-specific
+rubrics. All conditions traverse the same gateway hop.
 
 \begin{table}[h]
 \centering
-\begin{tabular}{lccc}
+\begin{tabular}{lcccc}
 \toprule
-Condition & Success & Cost / completed task & Served context (tok) \\
+& \multicolumn{2}{c}{\texttt{sonnet-4-6}} & \multicolumn{2}{c}{\texttt{haiku-4-5}} \\
+Condition & Success & \$/task & Success & \$/task \\
 \midrule
-Raw federation (131 tools) & 96.7\% & \$0.263 & $\sim$24{,}360 \\
-Compiled (rewrite+macros+selection) & 91.1\% & \$0.050 & $\sim$845 \\
-Compiled + consolidation & 96.7\% & \textbf{\$0.041} & $\sim$845 \\
-Consolidation, no selection & \textbf{100.0\%} & \$0.134 & $\sim$14{,}506 \\
-Cross-server consolidation & 95.6\% & \$0.052 & $\sim$845 \\
+Raw federation (137 tools) & 96.7\% & \$0.260 & \textbf{90.6\%} & \$0.090 \\
+Compiled (rewrite+selection) & 96.1\% & \$0.064 & 77.2\% & \$0.027 \\
+Compiled + consolidation & 96.1\% & \textbf{\$0.052} & 81.7\% & \textbf{\$0.022} \\
+Consolidation, no selection & 94.4\% & \$0.151 & 80.6\% & \$0.107 \\
+Cross-server consolidation & 96.1\% & \$0.054 & 81.7\% & \$0.026 \\
 \bottomrule
 \end{tabular}
-\caption{Pilot results (30 tasks $\times$ 3 trials per condition; 95\% CIs
-overlap for the top three compiled conditions). Preliminary; a larger,
-multi-model study is in progress.}
+\caption{Results over 60 tasks $\times$ 3 trials per condition per model.
+Sonnet CIs overlap fully between raw and the compiled conditions.}
 \end{table}
 
-Three observations. First, \emph{consolidation dominates both ends of the
-frontier}: it recovers the accuracy the selection surface costs (91.1\%
-$\rightarrow$ 96.7\%) while further reducing cost, and without selection it
-achieves perfect pilot success at half the raw cost --- fewer, better-separated
-definitions improve both direct choice and retrieval. Second, the
-\emph{selection surface is the cost lever}: served context becomes
-essentially independent of catalog size. Third, \emph{cross-server
-consolidation is safe but under-tested here}: the pilot catalog contains
-minimal genuine cross-server overlap (the pass correctly proposed a single
-group), so its value case rests on overlap-rich pools and is deferred to the
-larger study.
+Four observations. First, for the stronger agent, \emph{compilation is
+approximately free accuracy at one-fifth the cost}: all compiled conditions
+are statistically indistinguishable from the raw federation, and compiled
+consolidation wins both axes. Second, \emph{compilation repairs cross-source
+arbitration}: on overlap-selection tasks the raw federation scored 90.0\%
+with the stronger agent while every compiled condition scored 100\% ---
+pool-aware disambiguation rewriting outperforms the naive federation exactly
+where multiple vendors overlap. Third, and centrally, \emph{the benefit is
+capability-gated}: the weaker agent reads the raw 25{,}000-token catalog
+competently (90.6\%) but pays roughly nine points for compiled indirection
+(its errored-call rate rises from 5.3\% to $\sim$24\%), and its
+overlap-selection result inverts. Surface compression trades context for
+indirection, and the price of indirection falls with agent capability ---
+approaching zero for frontier models. Deployments should select surfaces per
+agent model, which the toggle architecture makes a configuration choice.
+Fourth, \emph{cross-server consolidation is safe but not yet differentiated}:
+it ties compiled consolidation on both models; disambiguation rewriting
+appears to carry the arbitration load that explicit capability merging
+targets. A 30-task pilot preceding this study had suggested a 100\% ceiling
+for the no-selection condition; at doubled task count that figure regressed
+to 94.4\%, a reminder to distrust small-$n$ ceilings.
 
 \textbf{Threats to validity.} Small task count and trial count (wide
 intervals); judge circularity (a Claude model judging a Claude agent,
@@ -275,9 +290,7 @@ contribution.
 
 \section{Future Work}
 
-The immediate step is the larger evaluation: more tasks, additional agent
-models, and an overlap-rich condition that can measure cross-server
-consolidation's value. Beyond it: learned (log-driven) dead-tool elimination
+Immediate directions: learned (log-driven) dead-tool elimination
 and macro \emph{mining} from recurring call chains; schema-level rewriting
 (folding parameter guidance into field descriptions); and compilation
 targets beyond MCP.
