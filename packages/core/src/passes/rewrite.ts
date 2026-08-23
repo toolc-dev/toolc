@@ -5,15 +5,16 @@ import type { Pass, PassDiff, RewriteEntry } from "./types.js";
 /**
  * Bump when the prompt materially changes — invalidates all cached rewrites.
  */
-export const PROMPT_VERSION = "v2";
+export const PROMPT_VERSION = "v3";
 
 export function rewriteCacheKey(toolId: string, originalDescription: string): string {
   return `${toolId}:${contentHash(originalDescription)}:${PROMPT_VERSION}`;
 }
 
-const SYSTEM_PROMPT = `You optimize tool descriptions for LLM agents. You will receive every tool from one server so you can disambiguate siblings. For each tool, write an improved description:
+const SYSTEM_PROMPT = `You optimize tool descriptions for LLM agents. You will receive every tool from one server so you can disambiguate siblings, plus a summary of OTHER servers in the same pool so you can disambiguate across servers. For each tool, write an improved description:
 - First line: imperative summary, max 320 characters, stating exactly what the tool does and returns.
 - Explicitly disambiguate against sibling tools where confusion is plausible ("Use X instead when ...").
+- When a tool overlaps with another SERVER's capability (two news sources, two search tools), state when to prefer this one and name the alternative's full id.
 - If the original buries parameter guidance in prose, add a short "Parameters:" section with one line per parameter.
 - Never invent capabilities not present in the original description or schema.
 Respond with one block per tool, exactly in this format (no other prose):
@@ -77,7 +78,7 @@ export const rewritePass: Pass = async (graph, config, ctx) => {
       }
       for (const { siblings, targets } of batches) {
         try {
-          const proposals = await generateForSource(ctx.llm, model, siblings, targets);
+          const proposals = await generateForSource(ctx.llm, model, siblings, targets, poolSummary(graph.tools, sourceIdOf(targets)));
           for (const tool of targets) {
             const proposed = proposals.get(tool.name);
             if (!proposed) {
@@ -122,11 +123,28 @@ export const rewritePass: Pass = async (graph, config, ctx) => {
   return { graph: { ...graph, tools }, diff };
 };
 
+function sourceIdOf(tools: ToolNode[]): string {
+  return tools[0]?.source ?? "";
+}
+
+/** One-line-per-tool digest of the REST of the pool, for cross-server context. */
+function poolSummary(all: ToolNode[], excludeSource: string): string {
+  const others = all.filter(
+    (t) => t.kind === "passthrough" && isVisible(t) && t.source !== excludeSource,
+  );
+  if (others.length === 0) return "";
+  return others
+    .slice(0, 80)
+    .map((t) => `- ${t.id}: ${(t.description || "").split("\n")[0]?.slice(0, 90)}`)
+    .join("\n");
+}
+
 async function generateForSource(
   llm: NonNullable<Parameters<Pass>[2]["llm"]>,
   model: string,
   siblings: ToolNode[],
   targets: ToolNode[],
+  pool: string,
 ): Promise<Map<string, string>> {
   const catalog = siblings
     .map((t) => {
@@ -136,7 +154,10 @@ async function generateForSource(
       return `### ${t.name}\nparams: ${params.join(", ") || "(none)"}\n${t.description || "(no description)"}`;
     })
     .join("\n\n");
-  const prompt = `Server catalog (all sibling tools, for disambiguation context):\n\n${catalog}\n\nRewrite descriptions for these tools: ${targets.map((t) => t.name).join(", ")}`;
+  const prompt =
+    `Server catalog (all sibling tools, for disambiguation context):\n\n${catalog}\n\n` +
+    (pool ? `Other servers in the pool (for cross-server disambiguation):\n${pool}\n\n` : "") +
+    `Rewrite descriptions for these tools: ${targets.map((t) => t.name).join(", ")}`;
 
   const raw = await llm({ model, system: SYSTEM_PROMPT, prompt, maxTokens: 8192 });
   // Delimiter blocks instead of JSON: model-written descriptions contain

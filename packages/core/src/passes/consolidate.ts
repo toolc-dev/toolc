@@ -37,7 +37,7 @@ Rules:
 - Only group tools from at least TWO different sources that serve the same user-facing capability. Same-source families are handled elsewhere; never propose a single-source group.
 - Never merge tools with clashing semantics or side effects. Read-only lookups and mutating operations never share a facade.
 - 2 to MAX_GROUP members per group. A tool appears in at most one group. Most tools should remain ungrouped.
-- Group name: a short capability noun (news, web_search). Action names: snake_case, unique in the group, and MUST make the source obvious (e.g. aiera_web_search, massive_articles).
+- Group name: a short GENERIC capability noun (news, web_search, repo_search) that names the capability, NEVER a member's vendor or server name. Action names: snake_case, unique in the group, and MUST make the source obvious (e.g. aiera_web_search, massive_articles).
 - Group description: first line states the capability, max 320 characters. Then one line per action stating its SOURCE and when to prefer it over the sibling actions. Never invent capabilities.
 - Members are FULL tool ids exactly as given (source:tool_name).
 
