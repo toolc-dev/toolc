@@ -132,8 +132,8 @@ consumed-by relations contributed by macros).
 Each tool node carries:
 
 \begin{itemize}
-\item identity (\texttt{source:name}), the \emph{original} description and
-JSON-Schema input schema, immutable once introspected;
+\item identity, the \emph{original} description and
+JSON input schema, immutable once introspected;
 \item \emph{overlays}: the rewritten description, visibility, and surface placement (\texttt{surfaced});
 \item a kind: \texttt{passthrough}, \texttt{facade}, \texttt{macro}, or
 \texttt{meta};
@@ -228,8 +228,7 @@ tasks answerable by multiple sources, including sources that \emph{cannot}
 answer, e.g.\ the US-only NWS for Paris weather), 3 trials each, two agent
 models (\texttt{claude-sonnet-4-6}, \texttt{claude-haiku-4-5}; 1{,}800
 trials total), answers judged by a stronger model against task-specific
-rubrics (an LLM-as-judge design~\cite{zheng2023judge}; mitigations in
-Threats).
+rubrics (an LLM-as-judge design~\cite{zheng2023judge}).
 
 \begin{table}[h]
 \centering
