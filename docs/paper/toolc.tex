@@ -9,8 +9,7 @@
 \lstset{basicstyle=\ttfamily\small, breaklines=true, frame=single, framesep=4pt}
 
 \title{toolc: An Optimizing Compiler for Agent Tool Surfaces}
-\author{Bryan Healey\\ \texttt{bryan@toolc.dev}}
-\date{Draft, August 2026}
+\date{August 24, 2026}
 
 \begin{document}
 \maketitle
@@ -23,7 +22,7 @@ definition occupies context, near-duplicate tools degrade selection accuracy,
 and multi-step workflows must be improvised call-by-call. We present
 \textsc{toolc}, an optimizing compiler that treats the federated tool surface
 as a compilation target. \textsc{toolc} introspects downstream servers (or
-synthesizes catalogs directly from OpenAPI specifications and human-readable
+synthesizes catalogs directly from OpenAPI specifications or human-readable
 API documentation) into a capability-graph intermediate representation, then
 applies a sequence of independently toggleable passes: dead-tool elimination,
 LLM-assisted description rewriting with intra- and inter-server
@@ -49,14 +48,14 @@ on the world, and the Model Context Protocol has emerged as a standard
 transport for exposing tools to agents. The unit of deployment, however, is
 the \emph{server}, not the \emph{task}: a working agent setup typically
 federates several servers, each contributing tens of tool definitions written
-by different authors with different conventions.
+by different authors with different conventions that are not designed to work in parallel.
 
 This federation is an unoptimized program. Its costs are threefold:
 
 \begin{enumerate}
-\item \textbf{Context.} Every served tool definition is prompt input on every
+\item \textbf{Context.} Every served tool is prompt input on every
 turn. In our reference federation, 131 definitions consume roughly 24{,}000
-tokens before the agent reads the user's request.
+tokens before the agent reads the request.
 \item \textbf{Selection accuracy.} Catalogs contain near-duplicates
 (\texttt{search\_x}, \texttt{find\_x}, \texttt{get\_x}), machine-generated
 descriptions, and cross-server overlap (two news sources). The agent's tool
@@ -78,7 +77,7 @@ This paper makes four contributions:
 \item A capability-graph IR for federated tool surfaces that preserves
 original definitions as immutable facts and expresses every transformation as
 a reviewable overlay (\S\ref{sec:ir}).
-\item A pass architecture comprising dead-tool elimination, LLM-assisted
+\item A pass architecture comprising dead-tool elimination, LLM-assisted definition
 rewriting, deterministic consolidation of tool families into facades (within
 and across servers), macro inlining, and a retrieval-based selection surface;
 each pass is independently toggleable and its effect independently measurable
@@ -94,12 +93,17 @@ compilation dominates the naive federation on both cost and accuracy axes
 \section{Related Work}
 
 \textbf{Tool learning and selection.} A substantial literature addresses
-tool-augmented language models and tool selection at scale, including
-retrieval over large tool inventories and hierarchical selection. Our
-selection pass adopts retrieval (BM25 over compiled descriptions) as one
-point on a measured cost/accuracy frontier rather than as the architecture.
+tool-augmented language models~\cite{schick2023toolformer,yao2023react} and
+tool selection at scale, including retrieval over large tool
+inventories~\cite{qin2023toolllm,patil2023gorilla} and benchmarks of
+tool-use competence~\cite{li2023apibank}. Tool documentation itself drives
+zero-shot usage quality~\cite{hsieh2023tooldoc}, which our rewrite pass
+operationalizes. Our selection pass adopts retrieval
+(BM25~\cite{robertson2009bm25} over compiled descriptions) as one point on a
+measured cost/accuracy frontier rather than as the architecture.
 
-\textbf{API-to-agent interfaces.} Automatic conversion of OpenAPI
+\textbf{API-to-agent interfaces.} The Model Context Protocol~\cite{mcp2024}
+standardizes the transport this work compiles for. Automatic conversion of OpenAPI
 specifications into agent tools is widely practiced and widely observed to
 produce poor surfaces; our composition frontend embraces the mechanical
 conversion precisely because the compiler owns making the result good, and
@@ -107,13 +111,14 @@ our evaluation includes a deliberately naive machine-generated server as a
 worst-case input.
 
 \textbf{Prompt and context optimization.} Description rewriting relates to
-automatic prompt optimization; result compaction relates to context
-summarization. \textsc{toolc} differs in binding these to a persistent,
+automatic prompt optimization~\cite{zhou2023ape}; result compaction relates
+to context summarization. \textsc{toolc} differs in binding these to a persistent,
 versioned artifact with provenance (original text is never destroyed) and in
 validating LLM proposals with deterministic checks before they take effect.
 
-\textbf{Compiler framing.} We borrow the classical structure --- frontend,
-IR, passes, emitter, profile-guided optimization --- and find it maps cleanly:
+\textbf{Compiler framing.} We borrow the classical structure~\cite{aho2006compilers} --- frontend,
+IR, passes, emitter, profile-guided optimization~\cite{pettis1990pgo} --- and
+find it maps cleanly:
 tool catalogs are modules, near-duplicate families are common subexpressions,
 macros are inlined procedures, the selection surface is lazy loading, and
 runtime error clustering is PGO.
@@ -122,13 +127,14 @@ runtime error clustering is PGO.
 
 A compiled surface is a graph $G = (S, T, E)$: sources $S$ (downstream
 servers with catalog hashes), tools $T$, and data edges $E$ (produced-by /
-consumed-by relations contributed by macros). Each tool node carries:
+consumed-by relations contributed by macros).
+
+Each tool node carries:
 
 \begin{itemize}
 \item identity (\texttt{source:name}), the \emph{original} description and
 JSON-Schema input schema, immutable once introspected;
-\item \emph{overlays}: the rewritten description, visibility
-(\texttt{hidden} with a reason), and surface placement (\texttt{surfaced});
+\item \emph{overlays}: the rewritten description, visibility, and surface placement (\texttt{surfaced});
 \item a kind: \texttt{passthrough}, \texttt{facade}, \texttt{macro}, or
 \texttt{meta};
 \item for facades, a deterministic routing table from action names to member
@@ -147,7 +153,7 @@ specifications (each operation becomes a passthrough tool with constraints
 documentation, from which a draft specification is synthesized by an LLM
 under never-invent rules and then \emph{probe-validated}: parameterless GET
 endpoints are called against the live API, and endpoints that return 404 are
-flagged as probable hallucinations before anything compiles.
+flagged as probable hallucinations before anything compiles for ensure integrity.
 
 \section{Optimization Passes}\label{sec:passes}
 
@@ -155,7 +161,7 @@ Passes run in a fixed order, each mapping graph to graph; every pass emits a
 structured diff for review. All passes are user-toggleable configuration.
 
 \textbf{Dead-tool elimination} hides tools matched by user globs or by
-built-in noise patterns (health checks, debug endpoints).
+built-in noise patterns (such as health checks, debug endpoints).
 
 \textbf{Rewrite} regenerates descriptions with an LLM, batched per server
 with full sibling context plus a digest of the rest of the pool, under
@@ -188,7 +194,7 @@ round trip.
 
 The compiled artifact is served as a standard MCP endpoint. Every dispatch is
 logged (arguments, result, latency, parent call for facade/macro/meta
-fan-out), giving operators full-payload observability with live tail.
+fan-out), giving operators full-payload observability with a live tail for easy debugging.
 
 \textbf{Result compaction.} Results exceeding a token threshold are
 summarized at serve time by a small model under instructions that preserve
@@ -222,7 +228,8 @@ tasks answerable by multiple sources, including sources that \emph{cannot}
 answer, e.g.\ the US-only NWS for Paris weather), 3 trials each, two agent
 models (\texttt{claude-sonnet-4-6}, \texttt{claude-haiku-4-5}; 1{,}800
 trials total), answers judged by a stronger model against task-specific
-rubrics. All conditions traverse the same gateway hop.
+rubrics (an LLM-as-judge design~\cite{zheng2023judge}; mitigations in
+Threats).
 
 \begin{table}[h]
 \centering
@@ -260,13 +267,13 @@ agent model, which the toggle architecture makes a configuration choice.
 Fourth, \emph{cross-server consolidation is safe but not yet differentiated}:
 it ties compiled consolidation on both models; disambiguation rewriting
 appears to carry the arbitration load that explicit capability merging
-targets. A 30-task pilot preceding this study had suggested a 100\% ceiling
-for the no-selection condition; at doubled task count that figure regressed
+targets. A 30-task pilot preceding this study suggested a 100\% ceiling
+for the no-selection condition; when doubled, that figure regressed
 to 94.4\%, a reminder to distrust small-$n$ ceilings.
 
 \textbf{Threats to validity.} Small task count and trial count (wide
 intervals); judge circularity (a Claude model judging a Claude agent,
-mitigated by rubric-based judging of final answers only and by human
+mitigated by rubric-based judging and by human
 spot-checks); live-service drift between condition snapshots (mitigated by
 compiling all conditions from a single catalog snapshot); single agent model
 (the larger study adds model diversity).
@@ -286,20 +293,78 @@ The runtime completes a loop that static compilation cannot: logged calls
 reveal which tools agents actually use and how they fail; failures become
 typed fix proposals; applied fixes recompile the surface. We believe this
 observe--optimize--recompile loop, rather than any single pass, is the durable
-contribution.
+contribution that provides maximum value.
 
-\section{Future Work}
+\begin{thebibliography}{12}
 
-Immediate directions: learned (log-driven) dead-tool elimination
-and macro \emph{mining} from recurring call chains; schema-level rewriting
-(folding parameter guidance into field descriptions); and compilation
-targets beyond MCP.
+\bibitem{schick2023toolformer}
+T.~Schick, J.~Dwivedi-Yu, R.~Dess\`i, R.~Raileanu, M.~Lomeli, L.~Zettlemoyer,
+N.~Cancedda, and T.~Scialom.
+\newblock Toolformer: Language models can teach themselves to use tools.
+\newblock In \emph{Advances in Neural Information Processing Systems (NeurIPS)}, 2023.
+
+\bibitem{yao2023react}
+S.~Yao, J.~Zhao, D.~Yu, N.~Du, I.~Shafran, K.~Narasimhan, and Y.~Cao.
+\newblock ReAct: Synergizing reasoning and acting in language models.
+\newblock In \emph{International Conference on Learning Representations (ICLR)}, 2023.
+
+\bibitem{qin2023toolllm}
+Y.~Qin et~al.
+\newblock ToolLLM: Facilitating large language models to master 16000+ real-world APIs.
+\newblock In \emph{International Conference on Learning Representations (ICLR)}, 2024.
+
+\bibitem{patil2023gorilla}
+S.~G. Patil, T.~Zhang, X.~Wang, and J.~E. Gonzalez.
+\newblock Gorilla: Large language model connected with massive APIs.
+\newblock In \emph{Advances in Neural Information Processing Systems (NeurIPS)}, 2024.
+
+\bibitem{li2023apibank}
+M.~Li, Y.~Zhao, B.~Yu, F.~Song, H.~Li, H.~Yu, Z.~Li, F.~Huang, and Y.~Li.
+\newblock API-Bank: A comprehensive benchmark for tool-augmented LLMs.
+\newblock In \emph{Empirical Methods in Natural Language Processing (EMNLP)}, 2023.
+
+\bibitem{hsieh2023tooldoc}
+C.-Y. Hsieh, S.-A. Chen, C.-L. Li, Y.~Fujii, A.~Ratner, C.-Y. Lee, R.~Krishna,
+and T.~Pfister.
+\newblock Tool documentation enables zero-shot tool-usage with large language models.
+\newblock \emph{arXiv preprint arXiv:2308.00675}, 2023.
+
+\bibitem{robertson2009bm25}
+S.~Robertson and H.~Zaragoza.
+\newblock The probabilistic relevance framework: BM25 and beyond.
+\newblock \emph{Foundations and Trends in Information Retrieval}, 3(4):333--389, 2009.
+
+\bibitem{mcp2024}
+Anthropic.
+\newblock Introducing the Model Context Protocol.
+\newblock \url{https://modelcontextprotocol.io}, 2024.
+
+\bibitem{zhou2023ape}
+Y.~Zhou, A.~I. Muresanu, Z.~Han, K.~Paster, S.~Pitis, H.~Chan, and J.~Ba.
+\newblock Large language models are human-level prompt engineers.
+\newblock In \emph{International Conference on Learning Representations (ICLR)}, 2023.
+
+\bibitem{aho2006compilers}
+A.~V. Aho, M.~S. Lam, R.~Sethi, and J.~D. Ullman.
+\newblock \emph{Compilers: Principles, Techniques, and Tools}.
+\newblock Addison-Wesley, 2nd edition, 2006.
+
+\bibitem{pettis1990pgo}
+K.~Pettis and R.~C. Hansen.
+\newblock Profile guided code positioning.
+\newblock In \emph{Programming Language Design and Implementation (PLDI)}, 1990.
+
+\bibitem{zheng2023judge}
+L.~Zheng et~al.
+\newblock Judging LLM-as-a-judge with MT-Bench and Chatbot Arena.
+\newblock In \emph{Advances in Neural Information Processing Systems (NeurIPS)}, 2023.
+
+\end{thebibliography}
 
 \section*{Availability}
 
 The engine is open source (Apache-2.0) at
 \url{https://github.com/toolc-dev/toolc} and on npm as \texttt{@toolc/*}; the
-hosted service is at \url{https://toolc.dev}. Benchmark tasks, transcripts,
-and reports ship with the repository.
+hosted service is at \url{https://toolc.dev}.
 
 \end{document}
