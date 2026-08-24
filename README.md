@@ -20,12 +20,11 @@ chains. toolc compiles the federation instead:
 - **Compose**: REST APIs join the pool straight from an OpenAPI spec, or from
   a drafted spec synthesized from their documentation
 - **Observe**: every call logged with arguments and results; recurring errors
-  cluster into recommended compiler fixes
+  cluster into recommended fixes
 
 ## Benchmark
 
-131 tools across 5 live servers, 30 tasks × 3 trials, judged answers, same
-gateway hop in every condition
+131 tools across 5 live servers, 30 tasks × 3 trials, judged answers
 ([full grid](docs/benchmark-2026-08-09.md) ·
 [consolidation run](docs/benchmark-consolidate-2026-08-10.md)):
 
@@ -75,8 +74,7 @@ See [SELF_HOSTING.md](SELF_HOSTING.md) for Docker deployment.
 
 [toolc.dev](https://toolc.dev) runs this same engine as a managed service:
 compiled HTTPS endpoints, a console with a playground and full-payload log
-explorer, docs-to-spec drafting, error-driven fix recommendations, and
-usage-based billing (free tier included).
+explorer, docs-to-spec drafting, and error-driven fix recommendations.
 
 ## Layout
 
@@ -90,5 +88,4 @@ usage-based billing (free tier included).
 
 The engine (everything in this repository) is Apache-2.0, forever: anyone
 can compile and serve their own tool surfaces locally with the exact same
-compilation quality as the hosted product. The toolc.dev console and hosted
-platform are proprietary.
+compilation quality as the hosted product.
