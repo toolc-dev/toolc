@@ -1,0 +1,37 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "dev.toolc/toolc",
+  "description": "Optimizing compiler and gateway for agent tool surfaces: many MCP servers or REST APIs in, one lean compiled MCP endpoint out. Benchmarked 5x cheaper per completed task with accuracy held.",
+  "repository": {
+    "url": "https://github.com/toolc-dev/toolc",
+    "source": "github"
+  },
+  "websiteUrl": "https://toolc.dev",
+  "version": "0.1.1",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@toolc/cli",
+      "version": "0.1.1",
+      "transport": {
+        "type": "stdio"
+      },
+      "packageArguments": [
+        {
+          "type": "positional",
+          "value": "serve",
+          "description": "Serve the compiled (or mirrored) tool surface over stdio"
+        }
+      ],
+      "environmentVariables": [
+        {
+          "name": "ANTHROPIC_API_KEY",
+          "description": "Enables the LLM-assisted compile passes (rewrite, consolidate). Without it, toolc serves a mirror of the original tool surface.",
+          "isRequired": false,
+          "isSecret": true,
+          "format": "string"
+        }
+      ]
+    }
+  ]
+}
