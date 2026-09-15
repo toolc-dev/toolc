@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "dev.toolc/toolc",
-  "description": "Optimizing compiler and gateway for agent tool surfaces: many MCP servers or REST APIs in, one lean compiled MCP endpoint out. Benchmarked 5x cheaper per completed task with accuracy held.",
+  "description": "Optimizing compiler for agent tools: many MCP servers or REST APIs in, one lean endpoint out.",
   "repository": {
     "url": "https://github.com/toolc-dev/toolc",
     "source": "github"
